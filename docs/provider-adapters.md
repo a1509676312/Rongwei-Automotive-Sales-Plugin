@@ -52,13 +52,15 @@ Model Studio 的 Function Calling 文档说明了工具定义、模型生成调�
 
 ### 4. 智谱 GLM
 
-智谱官方接口文档展示 assistant message 中的 `tool_calls`，包含函数名称、JSON 参数字符串和调用 ID；同时也区分 function 与 MCP 类型的调用。智谱智能体平台的 Agent 节点亦说明支持 Function Call 和插件。
+**首批接入优先走阿里云百炼托管的 GLM Function Calling**，因为百炼官方 Function Calling 支持模型列表明确包括 GLM-5.3、GLM-5.2、GLM-5.1 和 GLM-5；其中 GLM 调用 Function Calling 时通常需要在请求里传入 `extra_body={"tool_stream": true}`，GLM-5.3 默认已开启该参数。实际仍以具体模型版本的文档为准。
 
 官方资料：
-- https://docs.bigmodel.cn/api-reference/助手-api/助手对话
-- https://docs.bigmodel.cn/cn/guide/platform/intelligent-agent
+- https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
+- https://docs.bailian.console.aliyun.com/zh/model-studio/glm-zhipu
 
-**Rongwei 适配要求：** 区分智谱原生 API 与百炼托管 GLM 两种路径；不假设两种路径参数完全一样。先完成原生 GLM function call 的非流式往返，再测试流式和 MCP。
+**Rongwei 适配要求：** 使用百炼兼容接口和 DashScope API Key。项目中的 GLM 适配器配置为 `DASHSCOPE_API_KEY`、`GLM_MODEL` 和可覆盖的 `GLM_BASE_URL`，默认北京兼容模式 endpoint，并传入 `tool_stream=true`。
+
+智谱原生 BigModel 的助手对话 API 页面目前标注为 deprecated，虽然文档返回结构中包含 tool_calls，但不应把这个旧助手 API 当作第一接入方案。原生 BigModel Chat Completions 若要列入后续支持，需另行确认当前非弃用 API、可用模型列表及完整工具调用往返，再增加单独适配器。
 
 ### 5. 百度千帆 / ERNIE
 
