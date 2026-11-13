@@ -48,7 +48,7 @@ def inline_local_refs(schema: dict[str, Any]) -> dict[str, Any]:
 
     expanded = expand({key: value for key, value in schema.items() if key != "$defs"})
     if not isinstance(expanded, dict):
-        raise ValueError("A tool parameter schema must be a JSON object schema.")
+        raise TypeError("A tool parameter schema must be a JSON object schema.")
     expanded.setdefault("type", "object")
     expanded.setdefault("additionalProperties", False)
     return expanded
