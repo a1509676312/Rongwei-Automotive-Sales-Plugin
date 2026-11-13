@@ -97,6 +97,15 @@ class LeadInput(ContractModel):
             missing = sorted(set(item.evidence_ids) - known)
             if missing:
                 raise ValueError(f"Unknown evidence IDs referenced: {', '.join(missing)}")
+        for milestone in self.milestones:
+            if milestone.key == "payment_received":
+                for evidence_id in milestone.evidence_ids:
+                    source = next(item.source for item in self.evidence if item.id == evidence_id)
+                    if source not in {"user_note", "verified_external_source"}:
+                        raise ValueError(
+                            "payment_received requires user-verified or externally verified evidence; "
+                            "a buyer's promise or message is not proof of receipt."
+                        )
         return self
 
 
@@ -124,11 +133,12 @@ class LeadAssessment(ContractModel):
     evidence_coverage: int = Field(ge=0, le=100)
     current_stage: Literal[
         "new_inquiry", "needs_discovery", "qualified_opportunity", "solution_alignment",
-        "commercial_process", "order_process", "payment_pending", "order_confirmed", "closed_lost"
+        "commercial_process", "order_process", "payment_pending", "payment_received", "order_confirmed", "closed_lost"
     ]
     stage_reason: str
     positive_signals: list[SignalScore]
     caution_signals: list[str]
+    caution_signal_evidence: list[SignalScore]
     blockers: list[str]
     missing_information: list[str]
     next_objective: str
@@ -162,6 +172,7 @@ class ObjectionRequest(ContractModel):
 
 class ObjectionPlan(ContractModel):
     objection: ObjectionKey
+    case_specific_note: str
     primary_goal: str
     information_to_verify: list[str]
     recommended_sales_move: str
@@ -172,11 +183,11 @@ class ObjectionPlan(ContractModel):
 
 class SalesExecutionInput(ContractModel):
     """Structured observations for reviewing the seller's part of a conversation."""
-    customer_asked_a_specific_question: bool = False
-    seller_answered_that_question: bool = False
-    seller_used_verified_information: bool = False
-    seller_asked_one_clear_next_step: bool = False
-    seller_sent_relevant_material: bool = False
+    customer_asked_a_specific_question: bool | None = None
+    seller_answered_that_question: bool | None = None
+    seller_used_verified_information: bool | None = None
+    seller_asked_one_clear_next_step: bool | None = None
+    seller_sent_relevant_material: bool | None = None
     seller_made_unverified_claims: list[str] = Field(default_factory=list, max_length=20)
     generic_followups_without_new_value: int = Field(default=0, ge=0, le=100)
     response_delay_hours: float | None = Field(default=None, ge=0, le=8760)
