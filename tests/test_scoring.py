@@ -32,6 +32,7 @@ def test_qualified_buyer_gets_traceable_evidence_score():
             {"id": "e3", "source": "customer_message", "summary": "明确目的国家"},
             {"id": "e4", "source": "customer_message", "summary": "客户说明自己是经销商"},
             {"id": "e5", "source": "customer_message", "summary": "说明一个月内采购"},
+            {"id": "e6", "source": "customer_message", "summary": "客户明确说明自己是最终决策人"},
         ],
         fact_evidence={
             "vehicle_model": ["e1"],
@@ -39,7 +40,7 @@ def test_qualified_buyer_gets_traceable_evidence_score():
             "destination_country": ["e3"],
             "buyer_type": ["e4"],
             "purchase_timeline_days": ["e5"],
-            "decision_maker_known": ["e4"],
+            "decision_maker_known": ["e6"],
         },
         signals=[
             {"key": "vehicle_requirements_specific", "evidence_ids": ["e1"]},
@@ -268,3 +269,40 @@ def test_blocker_without_valid_evidence_is_rejected():
                 }
             ]
         )
+
+
+
+def test_unknown_and_pending_placeholders_do_not_count_as_confirmed_facts():
+    data = LeadInput(
+        facts={
+            "vehicle_model": "unknown",
+            "model_year": "待核实",
+            "destination_country": "not provided",
+        }
+    )
+    result = assess_lead(data)
+    assert data.facts.vehicle_model is None
+    assert data.facts.model_year is None
+    assert data.facts.destination_country is None
+    assert result.evidence_coverage == 0
+    assert "确认具体品牌和车型" in result.missing_information
+
+
+def test_explicit_vehicle_requirements_milestone_sets_qualified_stage():
+    data = LeadInput(
+        evidence=[
+            {
+                "id": "e1",
+                "source": "customer_message",
+                "summary": "客户确认需要某一具体车型和年款",
+            }
+        ],
+        milestones=[
+            {
+                "key": "vehicle_requirements_confirmed",
+                "evidence_ids": ["e1"],
+            }
+        ],
+    )
+    result = assess_lead(data)
+    assert result.current_stage == "qualified_opportunity"
