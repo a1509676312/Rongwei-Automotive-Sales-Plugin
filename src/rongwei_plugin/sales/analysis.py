@@ -15,6 +15,7 @@ STAGES = {
 EVIDENCE_CLASSES = {
     "user_provided", "externally_verified", "inference", "unknown", "conflict",
 }
+INTENT_LEVELS = {"low", "developing", "qualified", "high", "insufficient_evidence"}
 ANALYSIS_RULES = [
     "Reconstruct the conversation in chronological order and preserve speaker attribution.",
     "Separate explicit buyer statements from interpretations and unknowns.",
@@ -104,6 +105,8 @@ def validate_analysis_result(result: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(intent, dict):
         errors.append("intent_assessment must be an object")
     else:
+        if intent.get("level") not in INTENT_LEVELS:
+            errors.append("intent_assessment.level must be one of: " + ", ".join(sorted(INTENT_LEVELS)))
         score = intent.get("heuristic_index")
         if score is not None and (not isinstance(score, int) or isinstance(score, bool) or not 0 <= score <= 100):
             errors.append("heuristic_index must be an integer from 0 to 100 or null")
@@ -120,7 +123,11 @@ def validate_analysis_result(result: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(result.get(key), str) or not result[key].strip():
             errors.append(f"{key} is required and must be non-empty")
 
-    for item in result.get("evidence_and_confidence", []) or []:
+    evidence_items = result.get("evidence_and_confidence", []) or []
+    if not isinstance(evidence_items, list):
+        errors.append("evidence_and_confidence must be a list")
+        evidence_items = []
+    for item in evidence_items:
         if not isinstance(item, dict) or item.get("classification") not in EVIDENCE_CLASSES:
             errors.append("Each evidence item must use a valid classification")
             break
