@@ -7,7 +7,7 @@ Do not persist raw customer conversations or direct personal contact data by def
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -80,8 +80,38 @@ class ObservedBlocker(ContractModel):
     evidence_ids: list[str] = Field(min_length=1, max_length=20)
 
 
+_UNKNOWN_FACT_TEXT = {
+    "unknown",
+    "not known",
+    "not provided",
+    "n/a",
+    "na",
+    "待核实",
+    "待确认",
+    "未知",
+    "不清楚",
+    "未提供",
+}
+
+
 class LeadFacts(ContractModel):
     """Only facts the host AI can ground in supplied material."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_unknown_fact_text(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        normalized = dict(value)
+        for field_name, field_value in normalized.items():
+            if not isinstance(field_value, str):
+                continue
+            marker = field_value.strip().lower()
+            if field_name == "buyer_type" and marker in _UNKNOWN_FACT_TEXT:
+                normalized[field_name] = "unknown"
+            elif marker in _UNKNOWN_FACT_TEXT:
+                normalized[field_name] = None
+        return normalized
     vehicle_brand: str | None = Field(default=None, max_length=100)
     vehicle_model: str | None = Field(default=None, max_length=160)
     model_year: str | None = Field(default=None, max_length=40)
