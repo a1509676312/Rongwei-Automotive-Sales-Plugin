@@ -33,7 +33,7 @@ def test_objection_tool_never_invents_a_price():
         {"objection": "price_or_total_cost", "current_stage": "needs_discovery"},
     )
     assert "编造价格或价格区间" in result["avoid"]
-    assert "确认比较口径" in result["recommended_sales_move"]
+    assert "比较口径统一" in result["recommended_sales_move"]
 
 
 def test_review_flags_unverified_promises_as_high_risk():
