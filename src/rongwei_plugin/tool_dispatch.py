@@ -95,6 +95,7 @@ def execute_provider_tool_calls(
         results.append({
             "role": "tool",
             "tool_call_id": call_id,
+            "name": name,
             "content": json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
         })
     return results
