@@ -17,10 +17,9 @@ Run:
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from openai import OpenAI
-
-from rongwei_plugin.prompts import load_sales_director_prompt
 from rongwei_plugin.tool_dispatch import execute_provider_tool_calls
 from rongwei_plugin.tools.catalog import get_tool_catalog
 
@@ -36,8 +35,16 @@ def main() -> None:
         base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
     )
     tools = get_tool_catalog()
+    prompt_path = (
+        Path(__file__).resolve().parents[1]
+        / "prompts"
+        / "automotive-export-sales-director.md"
+    )
+    if not prompt_path.is_file():
+        raise SystemExit(f"Sales-director prompt file not found: {prompt_path}")
+    system_prompt = prompt_path.read_text(encoding="utf-8")
     messages: list[object] = [
-        {"role": "system", "content": load_sales_director_prompt()},
+        {"role": "system", "content": system_prompt},
     ]
 
     customer_material = input("Paste customer chat text (do not include real phone/email): ").strip()
