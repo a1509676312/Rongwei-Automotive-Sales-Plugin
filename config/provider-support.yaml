@@ -1,0 +1,51 @@
+# Planned scope only. Re-check official docs and run contract tests before marking support verified.
+providers:
+  deepseek:
+    priority: 1
+    status: planned
+    integration: OpenAI-compatible tool-call adapter
+    official_docs:
+      - https://api-docs.deepseek.com/zh-cn/guides/tool_calls/
+      - https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/
+    notes:
+      - Preserve reasoning_content on every continuation request in thinking-mode tool-call flows.
+      - Do not assume Chat Completions supports insertion of arbitrary tool calls mid-history.
+  qwen_dashscope:
+    priority: 2
+    status: planned
+    integration: DashScope function-calling adapter
+    official_docs:
+      - https://docs.modelstudio.console.alibabacloud.com/en/model-studio/qwen-function-calling
+      - https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope
+  doubao_ark:
+    priority: 3
+    status: planned
+    integration: Volcano Engine Ark function-calling adapter
+    official_docs:
+      - https://docs.volcengine.com/docs/ark/function-calling
+    notes:
+      - Implement tool-call result round trips and bounded multi-call loops.
+  zhipu_glm:
+    priority: 4
+    status: planned
+    integration: BigModel tool-call adapter
+    official_docs:
+      - https://docs.bigmodel.cn/api-reference/助手-api/助手对话
+    notes:
+      - Validate current model-specific support for function and MCP tool calls.
+  baidu_qianfan_ernie:
+    priority: 5
+    status: planned
+    integration: Qianfan tool-call adapter
+    official_docs:
+      - https://cloud.baidu.com/doc/qianfan-api/s/Amwbl4wln
+    notes:
+      - Verify exact request/response contract for each target model in Qianfan.
+  kimi_moonshot:
+    priority: 6
+    status: candidate_pending_tool_call_verification
+    integration: Not enabled
+    official_docs:
+      - https://www.kimi.ai/zh-hans/help/kimi-api/api-overview
+    notes:
+      - The inspected official overview confirms OpenAI API format compatibility but did not establish the exact custom tool-call contract. Verify before implementation.
