@@ -80,6 +80,35 @@ Kimi 的 API 概览说明了 API 格式兼容情况，但不能据此推断所�
 - https://www.kimi.ai/zh-hans/help/kimi-api/api-overview
 - https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
 
+## 统一接入配置
+
+开发分支提供一个基于 OpenAI Python SDK 的通用 Chat Completions / Function Calling 适配器。该适配器只覆盖当前确认的五个目标路径；不同账号区域、工作空间域名和模型 ID 仍可通过环境变量覆盖。
+
+| 运行标识 | API Key 环境变量 | 模型 ID 环境变量 | 默认 Base URL | 特殊参数 |
+|---|---|---|---|---|
+| `deepseek` | `DEEPSEEK_API_KEY` | `DEEPSEEK_MODEL` | `https://api.deepseek.com` | thinking enabled + reasoning_effort high |
+| `qwen` | `DASHSCOPE_API_KEY` | `QWEN_MODEL` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 需按百炼账号地域/业务空间覆盖 Base URL |
+| `doubao` | `ARK_API_KEY` | `DOUBAO_MODEL` | `https://ark.cn-beijing.volces.com/api/v3` | 使用火山方舟 Endpoint/模型标识 |
+| `glm` | `DASHSCOPE_API_KEY` | `GLM_MODEL` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 通过百炼托管 GLM，发送 tool_stream=true |
+| `qianfan` | `QIANFAN_API_KEY` | `QIANFAN_MODEL` | `https://qianfan.baidubce.com/v2` | 使用千帆 V2 API Key 与模型 ID |
+
+可选 Base URL 环境变量分别为 `DEEPSEEK_BASE_URL`、`QWEN_BASE_URL`、`ARK_BASE_URL`、`GLM_BASE_URL` 和 `QIANFAN_BASE_URL`。DashScope、GLM 和豆包应使用自己账号实际开通的区域与模型；默认值只是常用默认 endpoint，不保证对所有账号/模型适用。
+
+安装与调用：
+
+```bash
+pip install -e ".[providers]"
+python examples/chinese_ai_tool_call.py deepseek
+python examples/chinese_ai_tool_call.py qwen
+python examples/chinese_ai_tool_call.py doubao
+python examples/chinese_ai_tool_call.py glm
+python examples/chinese_ai_tool_call.py qianfan
+```
+
+DeepSeek、千问、豆包、百炼 GLM 和千帆都共用同一个业务工具目录和证据规则。适配器不会把客户消息发送到外部渠道，也不会把 API Key 写入仓库。
+
+**注意：** 以上是已经写入代码的接入路径与默认配置，尚不是已实测的接通报告。每个平台必须使用用户自己的账号、有效模型 ID 和 API Key 完成真实调用与回传测试后，才能将状态改为 verified。
+
 ## 当前统一工具调用流程
 
 1. 宿主 AI 接收用户提供的客户文字、截图、广告或车型资料。
