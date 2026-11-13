@@ -1,0 +1,145 @@
+{
+  "notice": "Synthetic evaluation data only. Replace or supplement with fully anonymized, consented real cases before calibration.",
+  "cases": [
+    {
+      "case_id": "synthetic-price-only-001",
+      "scenario": "Buyer asks only for the price after seeing an ad; gives no quantity, destination, timing, or requirements.",
+      "conversation": [
+        {
+          "speaker": "buyer",
+          "text": "How much is this car?"
+        },
+        {
+          "speaker": "seller",
+          "text": "Which country are you buying for?"
+        },
+        {
+          "speaker": "buyer",
+          "text": "Just send price."
+        }
+      ],
+      "expected": {
+        "buying_stage": "new_inquiry",
+        "intent_level": "low",
+        "critical_risk": "Insufficient purchase context; do not assume serious intent.",
+        "next_objective": "Qualify destination and intended purchase before any commercial quote."
+      }
+    },
+    {
+      "case_id": "synthetic-qualified-kenya-002",
+      "scenario": "Buyer states destination, quantity, model, intended purchase month, and asks about export documents.",
+      "conversation": [
+        {
+          "speaker": "buyer",
+          "text": "I need two units of this SUV for Kenya."
+        },
+        {
+          "speaker": "seller",
+          "text": "When do you plan to purchase?"
+        },
+        {
+          "speaker": "buyer",
+          "text": "This month. Please confirm the export documents and right-hand-drive availability."
+        }
+      ],
+      "expected": {
+        "buying_stage": "qualified_interest",
+        "intent_level": "qualified",
+        "critical_risk": "Vehicle configuration and export/document eligibility must be verified.",
+        "next_objective": "Verify exact configuration and destination requirements."
+      }
+    },
+    {
+      "case_id": "synthetic-supplier-comparison-003",
+      "scenario": "Buyer compares several suppliers and asks what evidence supports seller credibility.",
+      "conversation": [
+        {
+          "speaker": "buyer",
+          "text": "I have three suppliers. Why should I choose your company?"
+        },
+        {
+          "speaker": "seller",
+          "text": "We are the best supplier."
+        },
+        {
+          "speaker": "buyer",
+          "text": "Can you show company documents and a recent inspection report?"
+        }
+      ],
+      "expected": {
+        "buying_stage": "active_evaluation",
+        "intent_level": "developing",
+        "critical_risk": "Trust and proof gap; unsupported superlative damages credibility.",
+        "next_objective": "Provide verifiable company and vehicle evidence, if available."
+      }
+    },
+    {
+      "case_id": "synthetic-payment-concern-004",
+      "scenario": "Buyer is interested but concerned about payment safety and refuses an advance payment.",
+      "conversation": [
+        {
+          "speaker": "buyer",
+          "text": "I want to proceed, but I cannot pay a deposit before verifying the company."
+        },
+        {
+          "speaker": "seller",
+          "text": "You must trust us and pay today."
+        },
+        {
+          "speaker": "buyer",
+          "text": "I need a safer process."
+        }
+      ],
+      "expected": {
+        "buying_stage": "commercial_alignment",
+        "intent_level": "qualified",
+        "critical_risk": "Payment trust objection; pressure without evidence escalates risk.",
+        "next_objective": "Understand the buyer's verification requirements and provide only verifiable process evidence."
+      }
+    },
+    {
+      "case_id": "synthetic-multi-ad-conflict-005",
+      "scenario": "Conversation mentions two different vehicle ads and conflicting model-year details.",
+      "conversation": [
+        {
+          "speaker": "buyer",
+          "text": "I saw your blue sedan ad. Is it 2024?"
+        },
+        {
+          "speaker": "seller",
+          "text": "The SUV is 2025."
+        },
+        {
+          "speaker": "buyer",
+          "text": "I am asking about the blue sedan, not the SUV."
+        }
+      ],
+      "expected": {
+        "buying_stage": "needs_discovery",
+        "intent_level": "insufficient_evidence",
+        "critical_risk": "Ad/vehicle attribution and model year conflict.",
+        "next_objective": "Confirm the exact advertisement and verify the sedan's model year."
+      }
+    },
+    {
+      "case_id": "synthetic-silence-006",
+      "scenario": "Buyer has not replied for one day after an initial broad inquiry.",
+      "conversation": [
+        {
+          "speaker": "buyer",
+          "text": "Hello, I am interested."
+        },
+        {
+          "speaker": "seller",
+          "text": "Thanks. What model do you need?"
+        }
+      ],
+      "expected": {
+        "buying_stage": "new_inquiry",
+        "intent_level": "insufficient_evidence",
+        "critical_risk": "Not enough information to label the opportunity lost or unresponsive.",
+        "next_objective": "Use one light, relevant discovery follow-up after a proportionate interval."
+      }
+    }
+  ]
+}
