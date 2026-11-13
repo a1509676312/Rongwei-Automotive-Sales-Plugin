@@ -14,6 +14,7 @@ from rongwei_plugin.models import (
 from rongwei_plugin.sales.playbook import get_objection_plan
 from rongwei_plugin.sales.review import review_sales_execution
 from rongwei_plugin.sales.scoring import assess_lead
+from rongwei_plugin.schema_utils import tool_parameters_schema
 
 _TOOL_SCHEMAS: dict[str, tuple[str, str, type]] = {
     "rw_assess_automotive_export_lead": (
@@ -52,7 +53,7 @@ def get_tool_catalog() -> list[dict[str, Any]]:
             "function": {
                 "name": name,
                 "description": description,
-                "parameters": models[model_key].model_json_schema(),
+                "parameters": tool_parameters_schema(models[model_key]),
             },
         })
     return result
