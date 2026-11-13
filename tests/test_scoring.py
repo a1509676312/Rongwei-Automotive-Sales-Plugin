@@ -236,3 +236,35 @@ def test_milestone_timestamp_requires_timezone_offset():
                 }
             ],
         )
+
+
+def test_observed_blockers_must_reference_customer_evidence():
+    data = LeadInput(
+        evidence=[
+            {"id": "e1", "source": "customer_message", "summary": "客户担心运到蒙巴萨港的时间"}
+        ],
+        blockers=[
+            {
+                "category": "shipping_and_port",
+                "summary": "客户担心运输时间和目的港安排",
+                "severity": "high",
+                "evidence_ids": ["e1"],
+            }
+        ],
+    )
+    result = assess_lead(data)
+    assert result.blockers[0].category == "shipping_and_port"
+    assert result.blockers[0].evidence_ids == ["e1"]
+
+
+def test_blocker_without_valid_evidence_is_rejected():
+    with pytest.raises(ValidationError):
+        LeadInput(
+            blockers=[
+                {
+                    "category": "price_or_total_cost",
+                    "summary": "客户预算不足",
+                    "evidence_ids": ["missing"],
+                }
+            ]
+        )
