@@ -1,0 +1,1 @@
+"""Chinese AI provider adapters."""

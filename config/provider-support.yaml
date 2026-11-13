@@ -1,0 +1,84 @@
+# Official protocol existence has been checked; Rongwei live adapter tests are still pending.
+# Do not change integration_status to verified until real tool-call round trips pass.
+providers:
+  deepseek:
+    priority: 1
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: DeepSeek Tool Calls
+    model_id: configured_by_user
+    base_url: https://api.deepseek.com
+    official_docs:
+      - https://api-docs.deepseek.com/zh-cn/guides/tool_calls/
+      - https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/
+    adapter_requirements:
+      - Preserve the original assistant tool-call message.
+      - In thinking mode, preserve reasoning_content on every subsequent request that carries tools.
+      - Do not inject arbitrary tool-call messages into the middle of Chat Completions history.
+  qwen_dashscope:
+    priority: 2
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: Alibaba Cloud Model Studio Function Calling
+    model_id: configured_by_user
+    base_url: configure_from_workspace_and_region
+    official_docs:
+      - https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
+    adapter_requirements:
+      - Use the account workspace and region-specific endpoint.
+      - Verify support for the exact model family selected by the user.
+      - When using GLM models through Model Studio, apply tool_stream settings required by that model's current documentation.
+  doubao_ark:
+    priority: 3
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: Volcano Engine Ark Function Calling
+    model_id: configured_by_user
+    base_url: https://ark.cn-beijing.volces.com/api/v3
+    official_docs:
+      - https://docs.volcengine.com/docs/ark/function-calling
+    adapter_requirements:
+      - Verify tool calling for the exact Ark endpoint and model ID.
+      - Preserve tool call IDs and return tool results in the platform-required message format.
+  zhipu_glm:
+    priority: 4
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: GLM through Alibaba Cloud Model Studio Function Calling
+    api_key_env: DASHSCOPE_API_KEY
+    model_env: GLM_MODEL
+    base_url_env: GLM_BASE_URL
+    default_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    extra_body:
+      tool_stream: true
+    official_docs:
+      - https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
+    notes:
+      - Official Model Studio Function Calling docs include GLM-5.3, GLM-5.2, GLM-5.1 and GLM-5.
+      - Pass extra_body tool_stream=true for supported GLM models; GLM-5.3 defaults this to true.
+      - Native BigModel Assistant API is marked deprecated in the current Zhipu docs; do not use it as the first integration path.
+  baidu_qianfan_ernie:
+    priority: 5
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: Qianfan v2 Chat Completions tool_calls
+    model_id: configured_by_user
+    base_url: https://qianfan.baidubce.com/v2
+    official_docs:
+      - https://cloud.baidu.com/doc/qianfan-api/s/wmwbl48n4
+      - https://cloud.baidu.com/doc/qianfan-api/s/Amwbl4wln
+    adapter_requirements:
+      - Preserve the assistant message containing tool_calls.
+      - Append each result as role=tool with the exact model-generated tool_call_id.
+      - Keep the Agent App SSE /conversation/runs protocol separate from Chat Completions.
+  kimi_moonshot:
+    priority: 6
+    protocol_verified: false
+    integration_status: candidate_not_in_first_acceptance
+    integration: Native API tool-calling contract requires separate verification
+    model_id: configured_by_user
+    official_docs:
+      - https://www.kimi.ai/zh-hans/help/kimi-api/api-overview
+    notes:
+      - Model Studio lists certain Kimi models for Function Calling, but that is a separate hosted route and does not establish native Moonshot API compatibility.
+      - Do not advertise Rongwei native Moonshot support until the full call-and-return protocol is tested.
