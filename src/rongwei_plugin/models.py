@@ -81,6 +81,10 @@ class LeadInput(ContractModel):
     case_ref: str | None = Field(default=None, max_length=100)
     advertisement_ref: str | None = Field(default=None, max_length=100)
     facts: LeadFacts = Field(default_factory=LeadFacts)
+    fact_evidence: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Map each populated LeadFacts field to the evidence record IDs that support it.",
+    )
     evidence: list[EvidenceRecord] = Field(default_factory=list, max_length=100)
     signals: list[ObservedSignal] = Field(default_factory=list, max_length=100)
     milestones: list[ObservedMilestone] = Field(default_factory=list, max_length=50)
@@ -93,6 +97,22 @@ class LeadInput(ContractModel):
         if len(evidence_ids) != len(set(evidence_ids)):
             raise ValueError("Evidence record IDs must be unique.")
         known = set(evidence_ids)
+        fact_values = self.facts.model_dump(exclude_none=True)
+        valid_fact_fields = set(LeadFacts.model_fields)
+        unknown_fact_fields = sorted(set(self.fact_evidence) - valid_fact_fields)
+        if unknown_fact_fields:
+            raise ValueError(f"Unknown fact fields in fact_evidence: {', '.join(unknown_fact_fields)}")
+        for field_name, value in fact_values.items():
+            if value == "unknown" or value == "":
+                continue
+            refs = self.fact_evidence.get(field_name, [])
+            if not refs:
+                raise ValueError(f"Populated fact '{field_name}' requires supporting evidence IDs.")
+            missing = sorted(set(refs) - known)
+            if missing:
+                raise ValueError(
+                    f"Fact '{field_name}' references unknown evidence IDs: {', '.join(missing)}"
+                )
         for item in [*self.signals, *self.milestones]:
             missing = sorted(set(item.evidence_ids) - known)
             if missing:
