@@ -44,16 +44,20 @@ providers:
     priority: 4
     protocol_verified: true
     integration_status: pending_live_compatibility_test
-    integration: BigModel Assistant API function tool calls
-    model_id: configured_by_user
-    base_url: https://open.bigmodel.cn/api/paas/v4
+    integration: GLM through Alibaba Cloud Model Studio Function Calling
+    api_key_env: DASHSCOPE_API_KEY
+    model_env: GLM_MODEL
+    base_url_env: GLM_BASE_URL
+    default_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    extra_body:
+      tool_stream: true
     official_docs:
-      - https://docs.bigmodel.cn/api-reference/助手-api/助手对话
-      - https://docs.bigmodel.cn/cn/guide/platform/intelligent-agent
-    adapter_requirements:
-      - Distinguish native BigModel API from GLM served through Alibaba Model Studio.
-      - Verify endpoint-specific assistant_id and message-history requirements.
-      - Preserve tool call IDs, function arguments, and relevant reasoning metadata.
+      - https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
+      - https://docs.bailian.console.aliyun.com/zh/model-studio/glm-zhipu
+    notes:
+      - Official Model Studio Function Calling docs include GLM-5.3, GLM-5.2, GLM-5.1 and GLM-5.
+      - Pass extra_body tool_stream=true for supported GLM models; GLM-5.3 defaults this to true.
+      - Native BigModel Assistant API is marked deprecated in the current Zhipu docs; do not use it as the first integration path.
   baidu_qianfan_ernie:
     priority: 5
     protocol_verified: true
