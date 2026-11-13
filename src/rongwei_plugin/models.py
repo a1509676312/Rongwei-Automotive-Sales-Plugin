@@ -58,6 +58,28 @@ class ObservedMilestone(ContractModel):
     observed_at: datetime | None = None
 
 
+BlockerCategory = Literal[
+    "vehicle_fit",
+    "price_or_total_cost",
+    "shipping_and_port",
+    "import_compliance",
+    "payment_security",
+    "supplier_trust",
+    "decision_process",
+    "purchase_timing",
+    "configuration_uncertainty",
+    "competitor_comparison",
+    "other",
+]
+
+
+class ObservedBlocker(ContractModel):
+    category: BlockerCategory
+    summary: str = Field(min_length=1, max_length=400)
+    severity: Literal["low", "medium", "high"] = "medium"
+    evidence_ids: list[str] = Field(min_length=1, max_length=20)
+
+
 class LeadFacts(ContractModel):
     """Only facts the host AI can ground in supplied material."""
     vehicle_brand: str | None = Field(default=None, max_length=100)
@@ -90,7 +112,7 @@ class LeadInput(ContractModel):
     evidence: list[EvidenceRecord] = Field(default_factory=list, max_length=100)
     signals: list[ObservedSignal] = Field(default_factory=list, max_length=100)
     milestones: list[ObservedMilestone] = Field(default_factory=list, max_length=50)
-    blockers: list[str] = Field(default_factory=list, max_length=30)
+    blockers: list[ObservedBlocker] = Field(default_factory=list, max_length=30)
     prior_context_summary: str | None = Field(default=None, max_length=3000)
 
     @model_validator(mode="after")
@@ -119,7 +141,7 @@ class LeadInput(ContractModel):
                 raise ValueError(
                     f"Fact '{field_name}' references unknown evidence IDs: {', '.join(missing)}"
                 )
-        for item in [*self.signals, *self.milestones]:
+        for item in [*self.signals, *self.milestones, *self.blockers]:
             missing = sorted(set(item.evidence_ids) - known)
             if missing:
                 raise ValueError(f"Unknown evidence IDs referenced: {', '.join(missing)}")
@@ -175,7 +197,7 @@ class LeadAssessment(ContractModel):
     caution_signals: list[str]
     caution_signal_evidence: list[SignalScore]
     milestone_conflicts: list[str]
-    blockers: list[str]
+    blockers: list[ObservedBlocker]
     missing_information: list[str]
     next_objective: str
     next_action: str
