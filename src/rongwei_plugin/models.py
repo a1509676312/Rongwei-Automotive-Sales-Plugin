@@ -136,3 +136,58 @@ class LeadAssessment(ContractModel):
     reply_strategy: str
     follow_up_trigger: str
     verification_before_commitment: list[str]
+
+
+ObjectionKey = Literal[
+    "vehicle_fit",
+    "price_or_total_cost",
+    "shipping_and_port",
+    "import_compliance",
+    "payment_security",
+    "supplier_trust",
+    "decision_process",
+    "purchase_timing",
+    "configuration_uncertainty",
+    "competitor_comparison",
+    "unknown",
+]
+
+
+class ObjectionRequest(ContractModel):
+    objection: ObjectionKey
+    current_stage: str = Field(default="unknown", max_length=60)
+    context_summary: str | None = Field(default=None, max_length=2000)
+    confirmed_facts: list[str] = Field(default_factory=list, max_length=20)
+
+
+class ObjectionPlan(ContractModel):
+    objection: ObjectionKey
+    primary_goal: str
+    information_to_verify: list[str]
+    recommended_sales_move: str
+    suggested_question: str
+    reply_guidance: str
+    avoid: list[str]
+
+
+class SalesExecutionInput(ContractModel):
+    """Structured observations for reviewing the seller's part of a conversation."""
+    customer_asked_a_specific_question: bool = False
+    seller_answered_that_question: bool = False
+    seller_used_verified_information: bool = False
+    seller_asked_one_clear_next_step: bool = False
+    seller_sent_relevant_material: bool = False
+    seller_made_unverified_claims: list[str] = Field(default_factory=list, max_length=20)
+    generic_followups_without_new_value: int = Field(default=0, ge=0, le=100)
+    response_delay_hours: float | None = Field(default=None, ge=0, le=8760)
+    seller_message_summary: str | None = Field(default=None, max_length=1500)
+
+
+class SalesExecutionReview(ContractModel):
+    rating: Literal["strong", "acceptable", "needs_improvement", "high_risk"]
+    strengths: list[str]
+    missed_opportunities: list[str]
+    priority_correction: str
+    next_message_objective: str
+    do_not_repeat: list[str]
+    risk_notes: list[str]
