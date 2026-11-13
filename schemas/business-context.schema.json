@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rongwei.example/schemas/business-context.schema.json",
+  "title": "Rongwei Automotive Export Sales Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conversation",
+    "vehicles"
+  ],
+  "properties": {
+    "case_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "language": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Buyer language, BCP-47 when known."
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channel_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "User-provided label only; no channel integration."
+        },
+        "advertisement_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "advertisement_text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_confidence": {
+          "enum": [
+            "confirmed",
+            "probable",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "conversation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "speaker",
+          "text"
+        ],
+        "properties": {
+          "speaker": {
+            "enum": [
+              "buyer",
+              "seller",
+              "other",
+              "unknown"
+            ]
+          },
+          "timestamp": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "vehicles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vehicle_id"
+        ],
+        "properties": {
+          "vehicle_id": {
+            "type": "string"
+          },
+          "make": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model_year": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "trim": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "condition": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "specification_notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_reference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verification_status": {
+            "enum": [
+              "user_provided",
+              "externally_verified",
+              "inference",
+              "unknown",
+              "conflict"
+            ]
+          }
+        }
+      }
+    },
+    "buyer_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "destination_country": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "destination_port": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quantity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "budget": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Only if buyer/user supplied; never infer."
+        },
+        "use_case": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "purchase_timeline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decision_maker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "prior_context": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional user-supplied context; avoid personal data not needed for the task."
+    }
+  }
+}
