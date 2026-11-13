@@ -31,7 +31,13 @@ _SIGNAL_WEIGHTS: dict[str, int] = {
     "repeated_unanswered_followups": -5,
     "contradictory_requirements": -4,
 }
-_NEAR_ORDER_MILESTONES = {"proforma_requested", "contract_requested", "order_confirmed"}
+_NEAR_ORDER_MILESTONES = {
+    "proforma_requested",
+    "contract_requested",
+    "payment_initiated",
+    "payment_received",
+    "order_confirmed",
+}
 
 
 def _stage(data: LeadInput) -> tuple[str, str]:
