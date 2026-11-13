@@ -65,8 +65,8 @@ Model Studio 的 Function Calling 文档说明了工具定义、模型生成调�
 百度千帆官方 `POST /v2/chat/completions` 文档定义了 `tool_calls`、函数名和 JSON 参数字符串，并要求把模型返回的 assistant tool-call message 与匹配的 `role=tool` 消息放回下一轮 messages。工具返回消息需要使用真实的 `tool_call_id`。官方文档最近更新时间为 2026-11-11。
 
 官方资料：
-- https://cloud.baidu.com/doc/qianfan-api/s/wmwbl48ln
-- https://cloud.baidu.com/doc/qianfan-api/s/wmwbl44eg
+- https://cloud.baidu.com/doc/qianfan-api/s/wmwbl48n4
+- https://cloud.baidu.com/doc/qianfan-api/s/Amwbl4wln
 
 **Rongwei 适配要求：** 第一轮先支持 v2 Chat Completions 的函数调用；千帆 Agent 应用的 `/v2/app/conversation/runs` 和 SSE 事件协议作为单独适配路径，不与 Chat Completions 混为一谈。
 
