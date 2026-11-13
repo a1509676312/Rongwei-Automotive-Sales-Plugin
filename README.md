@@ -1,91 +1,124 @@
 # Rongwei Automotive Sales Plugin
 
-> A model-agnostic automotive-export sales capability plugin for Chinese AI platforms.
+> 汽车出口销售专业能力插件，为中国主流 AI 平台提供可调用的业务工具。
 
-**Status:** early development / API not yet released  
-**Repository:** https://github.com/a1509676312/Rongwei-Automotive-Sales-Plugin
+**状态：** 核心业务工具与 REST 接口正在开发；中国模型的实机接入验收尚未完成。  
+**仓库：** https://github.com/a1509676312/Rongwei-Automotive-Sales-Plugin
 
-## What this project is
+## 项目定位
 
-Rongwei Automotive Sales Plugin gives an AI host reusable automotive-export sales tools, structured workflows, evidence rules, and output schemas. The host AI performs language understanding and reasoning; this plugin supplies domain-specific sales operating logic and callable capabilities.
+Rongwei Automotive Sales Plugin 为宿主 AI 提供汽车出口销售工具、业务规则、统一输入输出结构和专业工作流程。宿主 AI 负责理解聊天和图片、进行语言推理；插件负责执行可验证的汽车出口销售业务逻辑。
 
-It is **not** an AI model, an AI engine, a CRM, a standalone chat bot, or a messaging-channel integration.
+它不是大模型、AI 引擎、销售大脑、CRM、独立聊天机器人，也不是聊天渠道连接器。
 
-Users or their AI host explicitly provide advertising material, vehicle details, customer messages, chat screenshots, and optional prior context. The plugin helps the host AI analyze the opportunity and decide what to do next.
+用户或宿主 AI 主动提供汽车广告、车型资料、客户聊天文字/截图和可选历史摘要。插件帮助分析客户采购需求、购买证据、成交障碍、销售跟进质量和下一步成交动作。
 
-## Strict project boundaries
+## 严格边界
 
-- No WhatsApp, Facebook, Instagram, Telegram, website-chat, or other channel connection; no message sending.
-- No dependency on the user's previous sales-engine repositories, code, databases, deployments, or services.
-- No required FastGPT, paid model, cloud account, or hosted database.
-- No customer PII, real conversation screenshots, credentials, quotes, contracts, or private business records in this public repository.
-- Replies are drafts only. The plugin never sends messages.
-- The AI must not invent vehicle specifications, prices, stock, shipping schedules, delivery promises, payment status, or orders.
-- Do not offer or fabricate a price unless the user supplies an authorized, verified price for the specific case.
-- Keep each advertisement and vehicle context isolated. Mark uncertain vehicle/source attribution as unverified.
-- Clearly separate user-provided facts, externally verified facts, inferences, and unknowns.
+- 不连接 WhatsApp、Facebook、Instagram、Telegram、网站在线聊天或其他消息渠道，不读取消息、不自动发送。
+- 不依赖此前任何 Rongwei 销售引擎仓库、代码、数据库、部署或服务。
+- 不要求 FastGPT、特定付费模型、云账户或客户数据库。
+- 公开仓库不存放客户个人信息、聊天截图、报价单、合同、API 密钥或其他私人业务资料。
+- 回复只能作为草稿，必须由用户审核并自行发送。
+- 不编造车型参数、价格、库存、运输安排、船期、交付承诺、付款状态、认证要求或订单事实。
+- 未经用户提供并明确授权，不主动给客户报价。
+- 不同广告、车型和客户资料严格区分；来源不明时标记待核实。
+- 明确区分客户/用户提供的事实、外部核实事实、推断与未知项。
 
-## Product goal: useful sales judgment, not superficial chat
+## 核心业务目标：销售分析必须能指导成交
 
-The central acceptance goal is practical sales analysis that helps a real automotive-export salesperson move a deal forward. A useful analysis must:
+一份实用分析至少应回答：
 
-1. Identify what the buyer is trying to purchase and for what purpose, using evidence.
-2. Reconstruct the buyer's requirements: model, year, configuration, quantity, destination, intended use, timeline, and decision process.
-3. Distinguish casual inquiry from a qualified opportunity without treating a price question as proof of buying intent.
-4. Identify positive signals, objections, trust gaps, commercial risks, contradictions, and missing information.
-5. State the current buying stage and explain why the evidence supports that stage.
-6. Choose one concrete next objective and a proportionate next action.
-7. Suggest a natural reply in the buyer's language, plus a concise Chinese explanation when useful.
-8. Set a sensible follow-up trigger or timing, without encouraging spam or pressure.
-9. Explain what information must be verified before making a claim or commitment.
-10. Review stalled or lost opportunities by root cause and identify what the salesperson should change.
+1. 客户到底想采购什么车、用于什么业务？
+2. 车型、年款、配置、数量、国家/港口、用途、采购时间、买家身份和决策链哪些已明确？
+3. 哪些信息是客户原话支持的事实，哪些是销售人员或 AI 的推断？
+4. 客户有哪些真实采购行为证据？哪些只是普通询价？
+5. 当前最大成交障碍是车型、总成本、运输、进口法规、付款安全、供应商信任、决策流程，还是采购时机？
+6. 当前处于什么销售阶段？依据是什么？
+7. 本轮沟通最应达成的一个目标是什么？
+8. 下一步应该问什么、核实什么或提供什么资料？
+9. 销售人员有没有回答客户问题，有没有使用已核实资料，有没有错过推进机会？
+10. 回复应该用客户的哪种语言表达，怎样自然推动下一步而不虚假承诺？
 
-An intent score, when used, is a transparent evidence index—not a statistical probability that the deal will close. Evidence coverage and confidence must be reported separately.
+意向分数是可解释的采购证据指数，不是成交概率。信息覆盖率和判断可信度分开展示。缺失信息不自动等于客户无意向；只问价格也不等于高意向。
 
-## Initial Chinese-model integration scope
+## 当前已实现的核心工具
 
-The project will focus on Chinese AI platforms, not every model worldwide. The first integration targets are:
+| 工具 | 用途 |
+|---|---|
+| `rw_assess_automotive_export_lead` | 根据证据分析客户采购意向、销售阶段、缺失条件、风险及下一步动作 |
+| `rw_get_objection_playbook` | 针对车型、价格/总成本、运输、法规、付款、信任、决策和采购时机等异议生成核实策略 |
+| `rw_review_sales_execution` | 检查销售是否回答客户问题、是否有证据、是否提出明确下一步、是否存在无效跟进或未经核实的承诺 |
 
-- **DeepSeek** — first priority and initial compatibility target.
-- **Qwen / Alibaba Cloud Model Studio (DashScope)**.
-- **Doubao / Volcano Engine Ark**.
-- **GLM / Zhipu BigModel**.
-- **ERNIE / Baidu Qianfan**.
+每个客户事实和关键购买信号都需要引用证据记录 ID。付款到账必须有卖方核实或外部凭证支持，客户一句“我已付款”不能自动标记为到账。
 
-Each adapter must be tested against the current official endpoint, tool-call protocol, structured-output behavior, multimodal input support where relevant, and failure handling. A provider is not marked supported merely because it offers a chat API.
+## 首批中国 AI 平台范围
 
-**Kimi / Moonshot** may be evaluated as a later candidate after its current official tool-calling contract is confirmed and tested. No unsupported compatibility claim is made in advance.
+不追求所有全球大模型，首批只聚焦中国主流平台：
 
-## Integration strategy
+1. **DeepSeek** — 第一优先，先做真实工具调用验收。
+2. **通义千问（阿里云百炼 / DashScope）**
+3. **豆包（火山方舟 / Ark）**
+4. **智谱 GLM（BigModel）**
+5. **百度千帆 / ERNIE**
 
-- Keep one canonical tool catalog and one canonical JSON schema.
-- Expose tools through MCP and OpenAPI/REST.
-- Provide provider-specific function/tool-call examples and adapters only where needed.
-- Keep provider credentials outside the plugin and in environment variables or the host application's secret manager.
-- Treat screenshots as host-supplied multimodal input or host-extracted text; the plugin does not connect to chat channels.
-- Make external vehicle data, market research, customs data, and persistent customer memory optional extensions.
+每个平台必须按具体模型版本、官方接口和工具调用协议实测。仅有普通聊天 API 不代表插件已接入成功。
 
-## Development principles
+**Kimi / Moonshot** 暂列后续候选，不纳入第一轮验收。不能因为 API 格式相似就宣称完整兼容。
 
-- Evidence before conclusions.
-- No invented facts or unjustified certainty.
-- Sales guidance must fit the buyer's actual stage and context.
-- One clear next action is better than a generic list of follow-ups.
-- Long conversations must be safely segmented and summarized without losing vehicle/ad attribution.
-- All outputs must validate against versioned schemas.
-- Automated tests must include realistic positive, negative, ambiguous, contradictory, and multilingual cases.
-- No integration is considered complete until a real provider call and end-to-end tool execution have been tested.
+## 接口与接入方式
 
-## Planned delivery stages
+- 统一业务工具目录和 Pydantic 数据契约。
+- 当前提供 OpenAPI/REST 接口，适用于支持自定义工具或 API 调用的 AI 平台。
+- 提供通用函数调用结果分发器，保留模型生成的 `tool_call_id`，并将结果按 `role=tool` 结构返回。
+- MCP 适配器列入后续开发，不冒称已经完成。
+- 模型 API Key 由宿主 AI 平台管理；插件自身的 REST API 使用独立的 `RONGWEI_API_KEY`。
+- 截图可由宿主 AI 先完成视觉识别，再把提取结果与证据交给插件。插件不接入聊天渠道。
+- 车型资料、市场/海关数据、客户历史记忆均作为可选扩展，不是基础运行前提。
 
-1. Project foundation, schemas, domain rules, and test fixtures.
-2. High-value automotive-export sales analysis tools and playbooks.
-3. MCP and OpenAPI interfaces.
-4. DeepSeek integration and end-to-end acceptance.
-5. Qwen, Doubao, GLM, and Baidu Qianfan adapters.
-6. Multimodal input handling, optional customer context storage, and optional external data connectors.
-7. Security review, regression tests, documentation, and release.
+## 本地运行（开发中）
 
-## Development status
+需要 Python 3.11 或更高版本。
 
-This repository is being built from scratch. Until code, tests, and live provider integration checks pass, features are considered planned or in development—not production-ready.
+```bash
+pip install -e ".[dev]"
+export RONGWEI_API_KEY="replace-with-your-own-long-random-key"
+python -m rongwei_plugin.api
+```
+
+默认只监听本机 `127.0.0.1:8000`。不要在没有配置 `RONGWEI_API_KEY` 的情况下将接口暴露到公网。
+
+- 健康检查：`GET http://127.0.0.1:8000/health`
+- 工具目录：`GET http://127.0.0.1:8000/v1/tools`
+- 执行工具：`POST http://127.0.0.1:8000/v1/tools/{tool_name}`
+- 批量回传工具调用：`POST http://127.0.0.1:8000/v1/tool-calls/dispatch`
+- OpenAPI 文档：`http://127.0.0.1:8000/docs`
+
+所有工具接口使用请求头 `X-Rongwei-API-Key`。工具调用只返回销售分析/建议，不会执行消息发送。
+
+## 开发验收原则
+
+- 证据优先，不把推测写成事实。
+- 不生成虚构价格、参数、库存、运输或付款承诺。
+- 销售动作必须符合客户当前阶段。
+- 一次只提出一个清楚、容易回答的下一步。
+- 长对话分段和摘要不得丢失广告来源、车型身份、日期、单位、国家和港口。
+- 所有工具入参和出参必须通过版本化 schema 校验。
+- 自动化测试必须覆盖真实正例、负例、模糊场景、矛盾场景和隐私场景。
+- 每个模型只有在真实 API 工具调用往返测试通过后，才标记为已支持。
+
+## 开发阶段
+
+1. 项目基础、数据契约、事实证据校验和销售分析标准。
+2. 核心销售工具、异议处理和销售执行质量检查。
+3. OpenAPI/REST 接入和通用工具调用分发。
+4. DeepSeek 实机调用和端到端验收。
+5. Qwen、Doubao、GLM、Baidu Qianfan 逐一适配和验收。
+6. 图片/截图输入工作流、可选客户上下文存储、可选外部车型/市场资料服务。
+7. 安全审查、回归测试、文档和正式发布。
+
+## 许可说明
+
+仓库目前尚未添加开源许可证。公开可见不等于已授予特定开源使用权；正式发布前需要确定许可证。
+
+本项目正在从零开发。未通过自动测试和模型实机集成验收的功能，均不视为生产可用。
