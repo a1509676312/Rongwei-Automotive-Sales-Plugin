@@ -41,6 +41,10 @@ _NEAR_ORDER_MILESTONES = {
 
 
 _MILESTONE_STAGES: dict[str, tuple[str, str]] = {
+    "vehicle_requirements_confirmed": (
+        "qualified_opportunity",
+        "客户已确认核心车型需求；下一步继续确认数量、目的地、采购时间和决策流程。",
+    ),
     "solution_agreed": (
         "solution_alignment",
         "客户已对方案表达认可，下一步应确认未解决的配置、合规和商务条件。",
@@ -75,12 +79,13 @@ _MILESTONE_STAGES: dict[str, tuple[str, str]] = {
     ),
 }
 _STAGE_RANK = {
-    "solution_alignment": 1,
-    "commercial_process": 2,
-    "order_process": 3,
-    "order_confirmed": 4,
-    "payment_pending": 5,
-    "payment_received": 6,
+    "qualified_opportunity": 1,
+    "solution_alignment": 2,
+    "commercial_process": 3,
+    "order_process": 4,
+    "order_confirmed": 5,
+    "payment_pending": 6,
+    "payment_received": 7,
 }
 
 
