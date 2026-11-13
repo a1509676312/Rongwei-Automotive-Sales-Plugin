@@ -122,6 +122,11 @@ def _stage(data: LeadInput) -> tuple[str, str, list[str]]:
             if item.observed_at.timestamp() > latest_decline
         ]
         if not active_after_decline:
+            if any(item.key == "payment_received" for item in active):
+                conflicts.append(
+                    "此前存在已核实到账记录，随后客户拒绝或取消；必须核对合同解除、退款责任、"
+                    "银行流水与当前履约状态，不能按普通未成交客户处理。"
+                )
             return (
                 "closed_lost",
                 "最新的明确节点是客户拒绝继续推进；此前订单或商务记录不代表当前仍在推进。",
