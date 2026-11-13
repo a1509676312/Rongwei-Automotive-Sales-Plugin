@@ -53,7 +53,6 @@ providers:
       tool_stream: true
     official_docs:
       - https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
-      - https://docs.bailian.console.aliyun.com/zh/model-studio/glm-zhipu
     notes:
       - Official Model Studio Function Calling docs include GLM-5.3, GLM-5.2, GLM-5.1 and GLM-5.
       - Pass extra_body tool_stream=true for supported GLM models; GLM-5.3 defaults this to true.
