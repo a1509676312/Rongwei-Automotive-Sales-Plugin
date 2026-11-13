@@ -1,51 +1,81 @@
-# Planned scope only. Re-check official docs and run contract tests before marking support verified.
+# Official protocol existence has been checked; Rongwei live adapter tests are still pending.
+# Do not change integration_status to verified until real tool-call round trips pass.
 providers:
   deepseek:
     priority: 1
-    status: planned
-    integration: OpenAI-compatible tool-call adapter
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: DeepSeek Tool Calls
+    model_id: configured_by_user
+    base_url: https://api.deepseek.com
     official_docs:
       - https://api-docs.deepseek.com/zh-cn/guides/tool_calls/
       - https://api-docs.deepseek.com/zh-cn/guides/thinking_mode/
-    notes:
-      - Preserve reasoning_content on every continuation request in thinking-mode tool-call flows.
-      - Do not assume Chat Completions supports insertion of arbitrary tool calls mid-history.
+    adapter_requirements:
+      - Preserve the original assistant tool-call message.
+      - In thinking mode, preserve reasoning_content on every subsequent request that carries tools.
+      - Do not inject arbitrary tool-call messages into the middle of Chat Completions history.
   qwen_dashscope:
     priority: 2
-    status: planned
-    integration: DashScope function-calling adapter
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: Alibaba Cloud Model Studio Function Calling
+    model_id: configured_by_user
+    base_url: configure_from_workspace_and_region
     official_docs:
-      - https://docs.modelstudio.console.alibabacloud.com/en/model-studio/qwen-function-calling
-      - https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-dashscope
+      - https://docs.modelstudio.console.alibabacloud.com/zh/model-studio/qwen-function-calling
+    adapter_requirements:
+      - Use the account workspace and region-specific endpoint.
+      - Verify support for the exact model family selected by the user.
+      - When using GLM models through Model Studio, apply tool_stream settings required by that model's current documentation.
   doubao_ark:
     priority: 3
-    status: planned
-    integration: Volcano Engine Ark function-calling adapter
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: Volcano Engine Ark Function Calling
+    model_id: configured_by_user
+    base_url: https://ark.cn-beijing.volces.com/api/v3
     official_docs:
       - https://docs.volcengine.com/docs/ark/function-calling
-    notes:
-      - Implement tool-call result round trips and bounded multi-call loops.
+    adapter_requirements:
+      - Verify tool calling for the exact Ark endpoint and model ID.
+      - Preserve tool call IDs and return tool results in the platform-required message format.
   zhipu_glm:
     priority: 4
-    status: planned
-    integration: BigModel tool-call adapter
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: BigModel Assistant API function tool calls
+    model_id: configured_by_user
+    base_url: https://open.bigmodel.cn/api/paas/v4
     official_docs:
       - https://docs.bigmodel.cn/api-reference/助手-api/助手对话
-    notes:
-      - Validate current model-specific support for function and MCP tool calls.
+      - https://docs.bigmodel.cn/cn/guide/platform/intelligent-agent
+    adapter_requirements:
+      - Distinguish native BigModel API from GLM served through Alibaba Model Studio.
+      - Verify endpoint-specific assistant_id and message-history requirements.
+      - Preserve tool call IDs, function arguments, and relevant reasoning metadata.
   baidu_qianfan_ernie:
     priority: 5
-    status: planned
-    integration: Qianfan tool-call adapter
+    protocol_verified: true
+    integration_status: pending_live_compatibility_test
+    integration: Qianfan v2 Chat Completions tool_calls
+    model_id: configured_by_user
+    base_url: https://qianfan.baidubce.com/v2
     official_docs:
+      - https://cloud.baidu.com/doc/qianfan-api/s/wmwbl48n4
       - https://cloud.baidu.com/doc/qianfan-api/s/Amwbl4wln
-    notes:
-      - Verify exact request/response contract for each target model in Qianfan.
+    adapter_requirements:
+      - Preserve the assistant message containing tool_calls.
+      - Append each result as role=tool with the exact model-generated tool_call_id.
+      - Keep the Agent App SSE /conversation/runs protocol separate from Chat Completions.
   kimi_moonshot:
     priority: 6
-    status: candidate_pending_tool_call_verification
-    integration: Not enabled
+    protocol_verified: false
+    integration_status: candidate_not_in_first_acceptance
+    integration: Native API tool-calling contract requires separate verification
+    model_id: configured_by_user
     official_docs:
       - https://www.kimi.ai/zh-hans/help/kimi-api/api-overview
     notes:
-      - The inspected official overview confirms OpenAI API format compatibility but did not establish the exact custom tool-call contract. Verify before implementation.
+      - Model Studio lists certain Kimi models for Function Calling, but that is a separate hosted route and does not establish native Moonshot API compatibility.
+      - Do not advertise Rongwei native Moonshot support until the full call-and-return protocol is tested.
