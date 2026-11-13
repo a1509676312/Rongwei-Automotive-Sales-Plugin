@@ -24,6 +24,7 @@ def test_dispatch_provider_function_call_and_keep_original_call_id():
     ])
     assert result[0]["role"] == "tool"
     assert result[0]["tool_call_id"] == "call-123"
+    assert result[0]["name"] == "rw_assess_automotive_export_lead"
     body = json.loads(result[0]["content"])
     assert body["ok"] is True
     assert body["result"]["evidence_score"] == 4
