@@ -8,8 +8,9 @@ the original assistant SDK message in the conversation history.
 from __future__ import annotations
 
 import os
+from collections.abc import MutableSequence
 from dataclasses import dataclass
-from typing import Any, MutableSequence
+from typing import Any
 
 from rongwei_plugin.tool_dispatch import execute_provider_tool_calls
 from rongwei_plugin.tools.catalog import get_tool_catalog
