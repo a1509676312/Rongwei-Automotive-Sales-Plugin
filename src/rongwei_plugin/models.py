@@ -44,6 +44,7 @@ class EvidenceRecord(ContractModel):
     summary: str = Field(min_length=1, max_length=500)
     observed_at: datetime | None = None
     source_ref: str | None = Field(default=None, max_length=160)
+    is_verified: bool = False
 
 
 class ObservedSignal(ContractModel):
@@ -54,6 +55,7 @@ class ObservedSignal(ContractModel):
 class ObservedMilestone(ContractModel):
     key: MilestoneKey
     evidence_ids: list[str] = Field(min_length=1, max_length=20)
+    observed_at: datetime | None = None
 
 
 class LeadFacts(ContractModel):
@@ -121,14 +123,18 @@ class LeadInput(ContractModel):
             missing = sorted(set(item.evidence_ids) - known)
             if missing:
                 raise ValueError(f"Unknown evidence IDs referenced: {', '.join(missing)}")
+        evidence_by_id = {item.id: item for item in self.evidence}
         for milestone in self.milestones:
             if milestone.key == "payment_received":
                 for evidence_id in milestone.evidence_ids:
-                    source = next(item.source for item in self.evidence if item.id == evidence_id)
-                    if source not in {"user_note", "verified_external_source"}:
+                    record = evidence_by_id[evidence_id]
+                    if (
+                        record.source not in {"user_note", "verified_external_source"}
+                        or record.is_verified is not True
+                    ):
                         raise ValueError(
-                            "payment_received requires user-verified or externally verified evidence; "
-                            "a buyer's promise or message is not proof of receipt."
+                            "payment_received requires evidence explicitly marked is_verified=true "
+                            "from user_note or verified_external_source; a buyer's message is not proof."
                         )
         return self
 
@@ -163,6 +169,7 @@ class LeadAssessment(ContractModel):
     positive_signals: list[SignalScore]
     caution_signals: list[str]
     caution_signal_evidence: list[SignalScore]
+    milestone_conflicts: list[str]
     blockers: list[str]
     missing_information: list[str]
     next_objective: str
