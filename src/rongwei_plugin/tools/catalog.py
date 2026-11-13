@@ -18,21 +18,27 @@ from rongwei_plugin.schema_utils import tool_parameters_schema
 
 _TOOL_SCHEMAS: dict[str, tuple[str, str, type]] = {
     "rw_assess_automotive_export_lead": (
-        "Assess a car-export lead from structured facts and traceable evidence. "
-        "Returns an explainable evidence index, confidence, stage, missing information, "
-        "and next action. This is not a close probability and does not send messages.",
+        (
+            "Assess a car-export lead from structured facts and traceable evidence. "
+            "Returns an explainable evidence index, confidence, stage, missing information, "
+            "and next action. This is not a close probability and does not send messages."
+        ),
         "assess",
         LeadInput,
     ),
     "rw_get_objection_playbook": (
-        "Get a practical, evidence-safe sales strategy for one automotive-export objection. "
-        "Returns what to verify, the objective, one discovery question, and claims to avoid.",
+        (
+            "Get a practical, evidence-safe sales strategy for one automotive-export objection. "
+            "Returns what to verify, the objective, one discovery question, and claims to avoid."
+        ),
         "objection",
         ObjectionRequest,
     ),
     "rw_review_sales_execution": (
-        "Review a salesperson's actions in a customer conversation. Identifies missed answers, "
-        "weak follow-up, missing next steps, and unsupported claims from structured observations.",
+        (
+            "Review a salesperson's actions in a customer conversation. Identifies missed answers, "
+            "weak follow-up, missing next steps, and unsupported claims from structured observations."
+        ),
         "review",
         SalesExecutionInput,
     ),
