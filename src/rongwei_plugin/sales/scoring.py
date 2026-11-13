@@ -41,6 +41,8 @@ def _stage(data: LeadInput) -> tuple[str, str]:
         return "order_confirmed", "客户已明确确认订单；该阶段来自明确记录，不由意向分数推断。"
     if "explicitly_declined" in milestones:
         return "closed_lost", "客户已明确拒绝继续推进；如后续重新联系，应作为新一轮机会重新评估。"
+    if "payment_received" in milestones:
+        return "payment_received", "已有用户核实或外部凭证支持的到账记录；仍需按订单流程核对后续履约事项。"
     if "payment_initiated" in milestones:
         return "payment_pending", "已有启动付款的明确记录；仍需核对实际到账，不能把付款意向当成收款。"
     if milestones.intersection({"proforma_requested", "contract_requested"}):
