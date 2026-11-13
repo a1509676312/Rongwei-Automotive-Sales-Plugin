@@ -247,11 +247,19 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
     stage, stage_reason, milestone_conflicts = _stage(data)
     missing: list[str] = []
     if not (facts.vehicle_model or facts.vehicle_brand):
-        missing.append("确认具体品牌、车型和年款")
+        missing.append("确认具体品牌和车型")
+    if not facts.model_year:
+        missing.append("确认目标年款")
+    if not facts.configuration:
+        missing.append("确认客户最在意的配置要求")
+    if not facts.use_case:
+        missing.append("确认车辆用途或采购后的业务场景")
     if not facts.quantity:
         missing.append("确认采购数量")
     if not facts.destination_country:
-        missing.append("确认目的国家及目标港口")
+        missing.append("确认目的国家")
+    elif not facts.destination_port:
+        missing.append("确认目标港口")
     if facts.buyer_type == "unknown":
         missing.append("确认客户是进口商、经销商、车队采购方还是终端用户")
     if facts.purchase_timeline_days is None:
