@@ -102,6 +102,10 @@ class LeadInput(ContractModel):
         unknown_fact_fields = sorted(set(self.fact_evidence) - valid_fact_fields)
         if unknown_fact_fields:
             raise ValueError(f"Unknown fact fields in fact_evidence: {', '.join(unknown_fact_fields)}")
+        for field_name in self.fact_evidence:
+            value = fact_values.get(field_name)
+            if value is None or value == "unknown" or value == "":
+                raise ValueError(f"Fact evidence supplied for an empty fact field: '{field_name}'.")
         for field_name, value in fact_values.items():
             if value == "unknown" or value == "":
                 continue
