@@ -7,7 +7,8 @@ to the same provider according to its conversation protocol.
 from __future__ import annotations
 
 import json
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -85,7 +86,7 @@ def execute_provider_tool_calls(
             try:
                 output = execute_tool(name, arguments)
                 payload = {"ok": True, "result": output}
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - convert provider tool failures to safe tool messages.
                 # Do not echo the supplied argument values or arbitrary exception text.
                 payload = {
                     "ok": False,
