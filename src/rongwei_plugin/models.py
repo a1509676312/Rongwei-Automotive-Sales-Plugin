@@ -116,7 +116,7 @@ class LeadInput(ContractModel):
     prior_context_summary: str | None = Field(default=None, max_length=3000)
 
     @model_validator(mode="after")
-    def validate_evidence_references(self) -> "LeadInput":
+    def validate_evidence_references(self) -> LeadInput:
         evidence_ids = [item.id for item in self.evidence]
         if len(evidence_ids) != len(set(evidence_ids)):
             raise ValueError("Evidence record IDs must be unique.")
