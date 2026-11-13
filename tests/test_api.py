@@ -107,7 +107,7 @@ def test_typed_objection_endpoint_returns_stage_context(monkeypatch):
     )
     assert response.status_code == 200
     result = response.json()
-    assert "订单流程" in result["case_specific_note"]
+    assert "order_process" in result["case_specific_note"]
     assert "已核对公司主体" in result["case_specific_note"]
 
 
