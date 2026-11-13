@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: Rongwei Automotive Sales Tools
+  version: 0.1.0
+  description: Provider-neutral automotive-export sales context preparation and result validation.
+servers:
+  - url: http://127.0.0.1:8765
+paths:
+  /v1/sales/prepare:
+    post:
+      operationId: prepareSalesAnalysis
+      summary: Normalize an automotive-export sales case and return the shared playbook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/business-context.schema.json'
+      responses:
+        '200':
+          description: Normalized evidence context for the host model
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Invalid business context
+  /v1/sales/validate:
+    post:
+      operationId: validateSalesAnalysis
+      summary: Validate a model-produced Rongwei sales analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/sales-analysis-result.schema.json'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [valid, errors]
+                properties:
+                  valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
