@@ -100,3 +100,12 @@ def test_synthetic_sales_case_pack_has_six_distinct_cases():
     assert len({case["case_id"] for case in data["cases"]}) == 6
     assert any(case["expected"]["buying_stage"] == "new_inquiry" for case in data["cases"])
     assert any(case["expected"]["buying_stage"] == "commercial_alignment" for case in data["cases"])
+
+
+def test_analysis_context_includes_evidence_led_playbook():
+    brief = build_sales_analysis_context({"conversation": [], "vehicles": []})
+    guide = brief["sales_playbook"]
+    assert "price-only question" in " ".join(brief["analysis_rules"])
+    assert "stronger_positive" in guide["intent_evidence"]
+    assert "payment_safety" in guide["objection_taxonomy"]
+    assert "No statistical close probability" in guide["scoring_warning"]
