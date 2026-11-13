@@ -82,3 +82,27 @@ def test_payment_intent_is_not_payment_received():
     result = assess_lead(data)
     assert result.current_stage == "payment_pending"
     assert "未收到可核验凭证前，不得把付款意向写成已付款。" in result.verification_before_commitment
+
+
+def test_payment_received_requires_user_or_external_verification():
+    with pytest.raises(ValidationError):
+        LeadInput(
+            evidence=[{"id": "e1", "source": "customer_message", "summary": "客户说已付款"}],
+            milestones=[{"key": "payment_received", "evidence_ids": ["e1"]}],
+        )
+
+    data = LeadInput(
+        evidence=[{"id": "e1", "source": "user_note", "summary": "卖方已核对银行到账记录"}],
+        milestones=[{"key": "payment_received", "evidence_ids": ["e1"]}],
+    )
+    assert assess_lead(data).current_stage == "payment_received"
+
+
+def test_caution_signals_keep_their_evidence_references():
+    data = LeadInput(
+        evidence=[{"id": "e1", "source": "customer_message", "summary": "客户明确表示只是浏览"}],
+        signals=[{"key": "explicitly_browsing_only", "evidence_ids": ["e1"]}],
+    )
+    result = assess_lead(data)
+    assert result.caution_signals == ["explicitly_browsing_only"]
+    assert result.caution_signal_evidence[0].evidence_ids == ["e1"]
