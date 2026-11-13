@@ -1,5 +1,5 @@
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
 
 from rongwei_plugin.models import LeadInput
 from rongwei_plugin.sales.scoring import assess_lead
