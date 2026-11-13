@@ -30,8 +30,17 @@ def test_qualified_buyer_gets_traceable_evidence_score():
             {"id": "e1", "source": "customer_message", "summary": "明确车型"},
             {"id": "e2", "source": "customer_message", "summary": "明确采购数量"},
             {"id": "e3", "source": "customer_message", "summary": "明确目的国家"},
-            {"id": "e4", "source": "customer_message", "summary": "说明一个月内采购"},
+            {"id": "e4", "source": "customer_message", "summary": "客户说明自己是经销商"},
+            {"id": "e5", "source": "customer_message", "summary": "说明一个月内采购"},
         ],
+        fact_evidence={
+            "vehicle_model": ["e1"],
+            "quantity": ["e2"],
+            "destination_country": ["e3"],
+            "buyer_type": ["e4"],
+            "purchase_timeline_days": ["e5"],
+            "decision_maker_known": ["e4"],
+        },
         signals=[
             {"key": "vehicle_requirements_specific", "evidence_ids": ["e1"]},
             {"key": "quantity_confirmed", "evidence_ids": ["e2"]},
@@ -106,3 +115,24 @@ def test_caution_signals_keep_their_evidence_references():
     result = assess_lead(data)
     assert result.caution_signals == ["explicitly_browsing_only"]
     assert result.caution_signal_evidence[0].evidence_ids == ["e1"]
+
+
+
+def test_populated_facts_require_evidence_references():
+    with pytest.raises(ValidationError):
+        LeadInput(facts={"vehicle_model": "Model Y"})
+
+    data = LeadInput(
+        facts={"vehicle_model": "Model Y"},
+        fact_evidence={"vehicle_model": ["e1"]},
+        evidence=[{"id": "e1", "source": "customer_message", "summary": "客户明确询问Model Y"}],
+    )
+    assert assess_lead(data).evidence_coverage == 20
+
+
+def test_fact_evidence_cannot_reference_missing_record():
+    with pytest.raises(ValidationError):
+        LeadInput(
+            facts={"quantity": 4},
+            fact_evidence={"quantity": ["not-found"]},
+        )
