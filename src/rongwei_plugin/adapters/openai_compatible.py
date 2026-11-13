@@ -78,7 +78,10 @@ def get_provider_config(provider: str) -> tuple[ProviderSpec, str, str, str]:
     spec = PROVIDERS[key]
     api_key = os.getenv(spec.api_key_env, "").strip()
     model = os.getenv(spec.model_env, "").strip()
-    base_url = os.getenv(spec.base_url_env, spec.default_base_url).strip().rstrip("/")
+    base_url = (
+        os.getenv(spec.base_url_env, "").strip()
+        or spec.default_base_url
+    ).rstrip("/")
     missing = [
         variable
         for variable, value in ((spec.api_key_env, api_key), (spec.model_env, model))
