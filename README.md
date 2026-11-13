@@ -63,7 +63,8 @@ Each adapter must be tested against the current official endpoint, tool-call pro
 - Provide provider-specific function/tool-call examples and adapters only where needed.
 - Keep provider credentials outside the plugin and in environment variables or the host application's secret manager.
 - Treat screenshots as host-supplied multimodal input or host-extracted text; the plugin does not connect to chat channels.
-- Make external vehicle data, market research, customs data, and persistent customer memory optional extensions.
+- Keep customer records local-first; encrypted local storage is optional until the desktop host bridge is installed and validated.
+- Make external vehicle data, market research, and customs data optional extensions.
 
 ## Development principles
 
@@ -83,7 +84,7 @@ Each adapter must be tested against the current official endpoint, tool-call pro
 3. MCP and OpenAPI interfaces.
 4. DeepSeek integration and end-to-end acceptance.
 5. Qwen, Doubao, GLM, and Baidu Qianfan adapters.
-6. Multimodal input handling, optional customer context storage, and optional external data connectors.
+6. Local-first encrypted customer vault, local companion/host bridges, and optional external data connectors.
 7. Security review, regression tests, documentation, and release.
 
 ## Current implementation snapshot
@@ -94,8 +95,10 @@ Implemented on the development branch:
 - Critical output checks for stage labels, intent evidence, fake close-probability fields, and prohibited auto-send flags.
 - Six synthetic evaluation scenarios covering price-only inquiry, qualified interest, supplier comparison, payment concern, ad/vehicle conflict, and short silence.
 - Initial DeepSeek function-calling adapter and Windows setup guide.
+- Initial passphrase-encrypted local SQLite vault primitive, with workspace binding and tests.
+- Local-first product requirements and privacy/security architecture documentation.
 
-Local unit-test logic has been exercised during development. A live DeepSeek API call has **not** yet been verified; it requires the owner's API key and network access. Qwen, Doubao, GLM, and ERNIE adapters remain planned.
+Local unit-test logic has been exercised during development. The local vault code has been committed but has **not** yet been run in the user’s Windows environment. The Harness integration and local filesystem bridge have **not** been validated against the installed Harness runtime. A live DeepSeek API call has **not** yet been verified; it requires the owner's API key and network access. Qwen, Doubao, GLM, and ERNIE adapters remain planned.
 
 See [Sales Analysis Quality Specification](docs/sales-analysis-quality-spec.md) and [DeepSeek Integration Guide](docs/deepseek-integration.md).
 
