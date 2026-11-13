@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .playbook import get_sales_playbook
+
 STAGES = {
     "new_inquiry", "needs_discovery", "qualified_interest", "active_evaluation",
     "commercial_alignment", "decision_pending", "ready_for_order",
@@ -83,6 +85,7 @@ def build_sales_analysis_context(context: dict[str, Any]) -> dict[str, Any]:
         "buyer_requirements": context.get("buyer_requirements") or {},
         "prior_context": context.get("prior_context"),
         "analysis_rules": ANALYSIS_RULES.copy(),
+        "sales_playbook": get_sales_playbook(),
         "required_decisions": [
             "buying_stage", "intent_assessment", "primary_next_objective",
             "recommended_next_action", "salesperson_review",
