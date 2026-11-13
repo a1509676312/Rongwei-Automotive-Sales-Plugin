@@ -22,6 +22,7 @@ class ProviderSpec:
     base_url_env: str
     default_base_url: str
     thinking_mode: bool = False
+    extra_body: dict[str, Any] | None = None
 
 
 PROVIDERS: dict[str, ProviderSpec] = {
@@ -45,10 +46,14 @@ PROVIDERS: dict[str, ProviderSpec] = {
         default_base_url="https://ark.cn-beijing.volces.com/api/v3",
     ),
     "glm": ProviderSpec(
-        api_key_env="ZHIPU_API_KEY",
+        # First supported route: GLM models through Alibaba Cloud Model Studio.
+        # The native Zhipu endpoint is a separate adapter candidate pending its own
+        # current, non-deprecated chat-completions contract test.
+        api_key_env="DASHSCOPE_API_KEY",
         model_env="GLM_MODEL",
-        base_url_env="ZHIPU_BASE_URL",
-        default_base_url="https://open.bigmodel.cn/api/paas/v4",
+        base_url_env="GLM_BASE_URL",
+        default_base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        extra_body={"tool_stream": True},
     ),
     "qianfan": ProviderSpec(
         api_key_env="QIANFAN_API_KEY",
@@ -128,9 +133,14 @@ def run_tool_call_conversation(
             "tools": tools,
             "tool_choice": "auto",
         }
+        if spec.extra_body:
+            request["extra_body"] = dict(spec.extra_body)
         if spec.thinking_mode:
             request["reasoning_effort"] = "high"
-            request["extra_body"] = {"thinking": {"type": "enabled"}}
+            request["extra_body"] = {
+                **request.get("extra_body", {}),
+                "thinking": {"type": "enabled"},
+            }
 
         response = client.chat.completions.create(**request)
         if not response.choices:
