@@ -46,9 +46,18 @@ def test_review_flags_unverified_promises_as_high_risk():
     assert "先撤回或核实所有无证据承诺" in result.priority_correction
 
 
+def test_review_does_not_treat_unobserved_actions_as_failures():
+    result = review_sales_execution(SalesExecutionInput())
+    assert result.rating == "acceptable"
+    assert result.missed_opportunities == []
+
+
 def test_review_detects_unanswered_customer_question():
     result = review_sales_execution(
-        SalesExecutionInput(customer_asked_a_specific_question=True)
+        SalesExecutionInput(
+            customer_asked_a_specific_question=True,
+            seller_answered_that_question=False,
+        )
     )
     assert result.rating == "needs_improvement"
     assert any("尚未被明确回答" in item for item in result.missed_opportunities)
