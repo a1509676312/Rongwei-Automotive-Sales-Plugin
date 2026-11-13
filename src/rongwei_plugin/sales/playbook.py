@@ -96,4 +96,21 @@ _PLANS: dict[ObjectionKey, dict[str, object]] = {
 def get_objection_plan(request: ObjectionRequest) -> ObjectionPlan:
     """Return a practical, fact-safe strategy for one primary objection."""
     plan = _PLANS[request.objection]
-    return ObjectionPlan(objection=request.objection, **plan)
+    context_parts: list[str] = []
+    if request.current_stage and request.current_stage != "unknown":
+        context_parts.append(f"当前销售阶段：{request.current_stage}")
+    if request.confirmed_facts:
+        context_parts.append("已经确认的信息：" + "；".join(request.confirmed_facts))
+    if request.context_summary:
+        context_parts.append("客户背景摘要：" + request.context_summary)
+    if not context_parts:
+        context_parts.append("未提供具体客户背景；使用该异议的通用策略，并先核对客户原话。")
+
+    if request.current_stage in {"order_process", "payment_pending", "payment_received"}:
+        context_parts.append("当前已接近订单或付款节点，优先核对正式文件和订单条件，不要退回泛泛的初步需求提问。")
+
+    return ObjectionPlan(
+        objection=request.objection,
+        case_specific_note="。".join(context_parts),
+        **plan,
+    )
