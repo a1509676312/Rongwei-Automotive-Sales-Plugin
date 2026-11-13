@@ -271,7 +271,6 @@ def test_blocker_without_valid_evidence_is_rejected():
         )
 
 
-
 def test_unknown_and_pending_placeholders_do_not_count_as_confirmed_facts():
     data = LeadInput(
         facts={
