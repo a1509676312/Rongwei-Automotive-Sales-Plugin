@@ -40,24 +40,109 @@ _NEAR_ORDER_MILESTONES = {
 }
 
 
-def _stage(data: LeadInput) -> tuple[str, str]:
-    milestones = {item.key for item in data.milestones}
-    facts = data.facts
-    if "order_confirmed" in milestones:
-        return "order_confirmed", "客户已明确确认订单；该阶段来自明确记录，不由意向分数推断。"
-    if "explicitly_declined" in milestones:
-        return "closed_lost", "客户已明确拒绝继续推进；如后续重新联系，应作为新一轮机会重新评估。"
-    if "payment_received" in milestones:
-        return "payment_received", "已有用户核实或外部凭证支持的到账记录；仍需按订单流程核对后续履约事项。"
-    if "payment_initiated" in milestones:
-        return "payment_pending", "已有启动付款的明确记录；仍需核对实际到账，不能把付款意向当成收款。"
-    if milestones.intersection({"proforma_requested", "contract_requested"}):
-        return "order_process", "客户已进入形式发票或合同流程，需核对车型、数量、买卖双方和条款。"
-    if milestones.intersection({"commercial_terms_discussed", "shipping_process_discussed"}):
-        return "commercial_process", "双方已开始讨论商务或运输流程；尚不能据此认定订单成立。"
-    if "solution_agreed" in milestones:
-        return "solution_alignment", "客户已对方案表达认可，下一步应确认未解决的配置、合规和商务条件。"
+_MILESTONE_STAGES: dict[str, tuple[str, str]] = {
+    "vehicle_requirements_confirmed": (
+        "solution_alignment",
+        "客户已确认基本车型需求；下一步核实具体配置和商务条件。",
+    ),
+    "solution_agreed": (
+        "solution_alignment",
+        "客户已对方案表达认可，下一步应确认未解决的配置、合规和商务条件。",
+    ),
+    "commercial_terms_discussed": (
+        "commercial_process",
+        "双方已开始讨论商务条件；尚不能据此认定订单成立。",
+    ),
+    "shipping_process_discussed": (
+        "commercial_process",
+        "双方已开始讨论运输流程；尚不能据此认定订单成立。",
+    ),
+    "proforma_requested": (
+        "order_process",
+        "客户已明确索取形式发票，需核对车型、数量、买卖双方和条款。",
+    ),
+    "contract_requested": (
+        "order_process",
+        "客户已明确索取合同，需核对订单主体、车型配置、数量和条款。",
+    ),
+    "order_confirmed": (
+        "order_confirmed",
+        "客户已明确确认订单；该阶段来自明确记录，不由意向分数推断。",
+    ),
+    "payment_initiated": (
+        "payment_pending",
+        "已有启动付款的明确记录；仍需核对实际到账，不能把付款意向当成收款。",
+    ),
+    "payment_received": (
+        "payment_received",
+        "已有卖方核实或外部凭证支持的到账记录；仍需核对后续履约事项。",
+    ),
+    "explicitly_declined": (
+        "closed_lost",
+        "客户已明确拒绝继续推进；应记录拒绝原因并尊重客户决定。",
+    ),
+}
 
+
+def _stage(data: LeadInput) -> tuple[str, str, list[str]]:
+    """Derive the current stage from dated milestones where possible.
+
+    When timestamps are absent, use a conservative progression order. A decline mixed
+    with active order/payment milestones is considered ambiguous rather than silently
+    marking the lead as active or lost.
+    """
+    milestones = data.milestones
+    conflicts: list[str] = []
+
+    dated = [item for item in milestones if item.observed_at is not None]
+    if milestones and len(dated) == len(milestones):
+        latest = max(
+            dated,
+            key=lambda item: item.observed_at.timestamp(),
+        )
+        stage_info = _MILESTONE_STAGES.get(latest.key)
+        if stage_info:
+            return stage_info[0], (
+                f"根据带时区时间戳的最新业务节点（{latest.key}）判断当前阶段。"
+                + stage_info[1]
+            ), conflicts
+
+    keys = {item.key for item in milestones}
+    active_keys = keys - {"explicitly_declined"}
+    if "explicitly_declined" in keys and active_keys:
+        conflict = (
+            "同时存在客户明确拒绝和订单/商务推进记录，但缺少完整时间顺序；"
+            "必须核实哪一条是客户当前状态。"
+        )
+        conflicts.append(conflict)
+        return (
+            "needs_discovery",
+            "历史里程碑存在冲突，当前阶段暂不能可靠判断。",
+            conflicts,
+        )
+
+    if "explicitly_declined" in keys:
+        stage, reason = _MILESTONE_STAGES["explicitly_declined"]
+        return stage, reason, conflicts
+
+    # When timestamps are missing, later verified commercial steps take precedence.
+    priority = (
+        "payment_received",
+        "payment_initiated",
+        "order_confirmed",
+        "contract_requested",
+        "proforma_requested",
+        "commercial_terms_discussed",
+        "shipping_process_discussed",
+        "solution_agreed",
+        "vehicle_requirements_confirmed",
+    )
+    for key in priority:
+        if key in keys:
+            stage, reason = _MILESTONE_STAGES[key]
+            return stage, reason, conflicts
+
+    facts = data.facts
     core = sum([
         bool(facts.vehicle_model or facts.vehicle_brand),
         bool(facts.quantity),
@@ -66,10 +151,22 @@ def _stage(data: LeadInput) -> tuple[str, str]:
         facts.buyer_type != "unknown",
     ])
     if core >= 3:
-        return "qualified_opportunity", "车型、数量、目的地、采购时间或买家身份中已有至少三项得到确认。"
+        return (
+            "qualified_opportunity",
+            "车型、数量、目的地、采购时间或买家身份中已有至少三项得到证据支持。",
+            conflicts,
+        )
     if core > 0 or data.evidence:
-        return "needs_discovery", "目前有初步信息，但关键采购条件仍不完整，需要先补齐需求。"
-    return "new_inquiry", "当前没有足够的可追溯信息判断采购需求。"
+        return (
+            "needs_discovery",
+            "目前有初步信息，但关键采购条件仍不完整，需要先补齐需求。",
+            conflicts,
+        )
+    return (
+        "new_inquiry",
+        "当前没有足够的可追溯信息判断采购需求。",
+        conflicts,
+    )
 
 
 def _band(score: int, has_order_milestone: bool) -> ScoreBand:
@@ -147,7 +244,7 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
     else:
         confidence = "low"
 
-    stage, stage_reason = _stage(data)
+    stage, stage_reason, milestone_conflicts = _stage(data)
     missing: list[str] = []
     if not (facts.vehicle_model or facts.vehicle_brand):
         missing.append("确认具体品牌、车型和年款")
@@ -162,9 +259,12 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
     if facts.decision_maker_known is not True:
         missing.append("确认对接人是否为决策人，以及是否还有其他审批人")
 
-    if stage in {"order_process", "payment_pending"}:
+    if stage in {"order_process", "payment_pending", "order_confirmed"}:
         next_objective = "把订单主体、车型配置、数量、单证和付款节点逐项核实"
         next_action = "逐项确认未锁定的订单要素，并将已确认事项与待核实事项分开记录。"
+    elif stage == "closed_lost":
+        next_objective = "记录未成交原因并尊重客户当前决定"
+        next_action = "基于客户明确反馈记录关闭原因；除非客户重新表达采购需求，否则不要重复催促。"
     elif stage == "payment_received":
         next_objective = "确认收款凭证与订单对应关系，并推进已确认的履约准备"
         next_action = "将到账凭证、付款主体和对应订单核对一致，再按已确认的合同和交付流程推进。"
@@ -178,7 +278,7 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
         next_objective = "确认客户是否有真实、具体的采购计划"
         next_action = "先问清车型用途、数量、目的国家和采购时间；一次只聚焦最关键的缺口。"
 
-    blockers = list(dict.fromkeys(data.blockers))
+    blockers = list(dict.fromkeys([*data.blockers, *milestone_conflicts]))
     if not blockers:
         blockers = ["尚未从输入中明确识别具体阻碍；需要结合客户原话确认。"]
 
@@ -194,6 +294,7 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
         positive_signals=signal_scores,
         caution_signals=caution,
         caution_signal_evidence=caution_evidence,
+        milestone_conflicts=milestone_conflicts,
         blockers=blockers,
         missing_information=missing,
         next_objective=next_objective,
