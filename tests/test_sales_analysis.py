@@ -109,3 +109,24 @@ def test_analysis_context_includes_evidence_led_playbook():
     assert "stronger_positive" in guide["intent_evidence"]
     assert "payment_safety" in guide["objection_taxonomy"]
     assert "No statistical close probability" in guide["scoring_warning"]
+
+
+def test_deepseek_adapter_dispatches_plugin_tool():
+    from rongwei_plugin.providers.deepseek import dispatch_tool_call, TOOL_DEFINITIONS
+
+    result = dispatch_tool_call("prepare_sales_analysis", {
+        "context": {
+            "conversation": [{"speaker": "buyer", "text": "Need one car for Ghana."}],
+            "vehicles": [],
+        }
+    })
+    assert result["conversation"][0]["speaker"] == "buyer"
+    assert TOOL_DEFINITIONS[0]["function"]["name"] == "prepare_sales_analysis"
+
+
+def test_deepseek_adapter_rejects_unknown_tool():
+    import pytest
+    from rongwei_plugin.providers.deepseek import dispatch_tool_call
+
+    with pytest.raises(ValueError):
+        dispatch_tool_call("send_whatsapp_message", {})
