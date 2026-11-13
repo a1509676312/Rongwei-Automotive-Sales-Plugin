@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 import secrets
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -124,7 +124,7 @@ def review_execution_endpoint(payload: SalesExecutionInput) -> SalesExecutionRev
 )
 def call_tool(
     tool_name: str,
-    payload: dict[str, Any] = Body(...),
+    payload: Annotated[dict[str, Any], Body()],
 ) -> dict[str, Any]:
     """Dynamically execute one canonical tool call."""
     if tool_name not in registered_tool_names():
@@ -151,7 +151,7 @@ def call_tool(
     tags=["tools"],
     dependencies=[Depends(_require_api_key)],
 )
-def dispatch_tool_calls(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+def dispatch_tool_calls(payload: Annotated[dict[str, Any], Body()]) -> dict[str, Any]:
     """Execute one bounded provider tool-call batch and return role=tool messages."""
     calls = payload.get("tool_calls")
     if not isinstance(calls, list):
