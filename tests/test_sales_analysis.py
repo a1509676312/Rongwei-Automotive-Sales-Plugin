@@ -72,3 +72,31 @@ def test_rejects_invalid_stage_and_empty_next_action():
         "recommended_next_action": " ",
     })
     assert check["valid"] is False
+
+
+def test_rejects_unknown_intent_level():
+    check = validate_analysis_result({
+        "buying_stage": "needs_discovery",
+        "intent_assessment": {
+            "level": "very_hot",
+            "rationale": "Unsupported label",
+            "evidence_coverage": "medium",
+            "confidence": "medium",
+        },
+        "primary_next_objective": "Clarify requirements.",
+        "recommended_next_action": "Ask one relevant question.",
+    })
+    assert check["valid"] is False
+    assert any("intent_assessment.level" in error for error in check["errors"])
+
+
+def test_synthetic_sales_case_pack_has_six_distinct_cases():
+    import json
+    from pathlib import Path
+
+    fixture = Path(__file__).parent / "fixtures" / "sales_cases.json"
+    data = json.loads(fixture.read_text(encoding="utf-8"))
+    assert len(data["cases"]) == 6
+    assert len({case["case_id"] for case in data["cases"]}) == 6
+    assert any(case["expected"]["buying_stage"] == "new_inquiry" for case in data["cases"])
+    assert any(case["expected"]["buying_stage"] == "commercial_alignment" for case in data["cases"])
