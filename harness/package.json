@@ -1,0 +1,21 @@
+{
+  "name": "rongwei-automotive-sales-harness",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Native DeepSeek Harness bundle exposing Rongwei automotive-export sales analysis tools.",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": "*"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
