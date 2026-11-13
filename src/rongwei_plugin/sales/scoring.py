@@ -41,10 +41,6 @@ _NEAR_ORDER_MILESTONES = {
 
 
 _MILESTONE_STAGES: dict[str, tuple[str, str]] = {
-    "vehicle_requirements_confirmed": (
-        "solution_alignment",
-        "客户已确认基本车型需求；下一步核实具体配置和商务条件。",
-    ),
     "solution_agreed": (
         "solution_alignment",
         "客户已对方案表达认可，下一步应确认未解决的配置、合规和商务条件。",
@@ -77,70 +73,69 @@ _MILESTONE_STAGES: dict[str, tuple[str, str]] = {
         "payment_received",
         "已有卖方核实或外部凭证支持的到账记录；仍需核对后续履约事项。",
     ),
-    "explicitly_declined": (
-        "closed_lost",
-        "客户已明确拒绝继续推进；应记录拒绝原因并尊重客户决定。",
-    ),
+}
+_STAGE_RANK = {
+    "solution_alignment": 1,
+    "commercial_process": 2,
+    "order_process": 3,
+    "order_confirmed": 4,
+    "payment_pending": 5,
+    "payment_received": 6,
 }
 
 
 def _stage(data: LeadInput) -> tuple[str, str, list[str]]:
-    """Derive the current stage from dated milestones where possible.
+    """Derive the latest achieved stage without regressing on lower-level history.
 
-    When timestamps are absent, use a conservative progression order. A decline mixed
-    with active order/payment milestones is considered ambiguous rather than silently
-    marking the lead as active or lost.
+    Sales stages are cumulative: a later shipping discussion does not erase an earlier
+    contract/payment milestone. A later explicit decline can close the opportunity, but
+    if it conflicts with other milestones and timestamps are missing, the stage is marked
+    ambiguous instead of being guessed.
     """
     milestones = data.milestones
     conflicts: list[str] = []
-
-    dated = [item for item in milestones if item.observed_at is not None]
-    if milestones and len(dated) == len(milestones):
-        latest = max(
-            dated,
-            key=lambda item: item.observed_at.timestamp(),
-        )
-        stage_info = _MILESTONE_STAGES.get(latest.key)
-        if stage_info:
-            return stage_info[0], (
-                f"根据带时区时间戳的最新业务节点（{latest.key}）判断当前阶段。"
-                + stage_info[1]
-            ), conflicts
-
     keys = {item.key for item in milestones}
-    active_keys = keys - {"explicitly_declined"}
-    if "explicitly_declined" in keys and active_keys:
-        conflict = (
-            "同时存在客户明确拒绝和订单/商务推进记录，但缺少完整时间顺序；"
-            "必须核实哪一条是客户当前状态。"
-        )
-        conflicts.append(conflict)
-        return (
-            "needs_discovery",
-            "历史里程碑存在冲突，当前阶段暂不能可靠判断。",
-            conflicts,
-        )
+    active = [item for item in milestones if item.key in _MILESTONE_STAGES]
 
     if "explicitly_declined" in keys:
-        stage, reason = _MILESTONE_STAGES["explicitly_declined"]
-        return stage, reason, conflicts
+        decline_events = [
+            item for item in milestones if item.key == "explicitly_declined"
+        ]
+        if not active:
+            return (
+                "closed_lost",
+                "客户已明确拒绝继续推进；应记录拒绝原因并尊重客户决定。",
+                conflicts,
+            )
 
-    # When timestamps are missing, later verified commercial steps take precedence.
-    priority = (
-        "payment_received",
-        "payment_initiated",
-        "order_confirmed",
-        "contract_requested",
-        "proforma_requested",
-        "commercial_terms_discussed",
-        "shipping_process_discussed",
-        "solution_agreed",
-        "vehicle_requirements_confirmed",
-    )
-    for key in priority:
-        if key in keys:
-            stage, reason = _MILESTONE_STAGES[key]
-            return stage, reason, conflicts
+        if any(item.observed_at is None for item in [*decline_events, *active]):
+            conflict = (
+                "同时存在客户明确拒绝和其他商务/订单推进节点，但缺少完整时间戳；"
+                "必须核实哪一条是客户最近状态。"
+            )
+            conflicts.append(conflict)
+            return "needs_discovery", "历史里程碑存在时间顺序冲突，当前阶段暂不能可靠判断。", conflicts
+
+        latest_decline = max(item.observed_at.timestamp() for item in decline_events)
+        active_after_decline = [
+            item for item in active
+            if item.observed_at.timestamp() > latest_decline
+        ]
+        if not active_after_decline:
+            return (
+                "closed_lost",
+                "最新的明确节点是客户拒绝继续推进；此前订单或商务记录不代表当前仍在推进。",
+                conflicts,
+            )
+        active = active_after_decline
+
+    if active:
+        highest = max(
+            active,
+            key=lambda item: _STAGE_RANK[_MILESTONE_STAGES[item.key][0]],
+        )
+        stage, reason = _MILESTONE_STAGES[highest.key]
+        return stage, reason, conflicts
 
     facts = data.facts
     core = sum([
