@@ -86,6 +86,19 @@ Each adapter must be tested against the current official endpoint, tool-call pro
 6. Multimodal input handling, optional customer context storage, and optional external data connectors.
 7. Security review, regression tests, documentation, and release.
 
+## Current implementation snapshot
+
+Implemented on the development branch:
+- Canonical business-context and analysis-result JSON Schemas.
+- Evidence-led automotive export sales playbook and context preparation.
+- Critical output checks for stage labels, intent evidence, fake close-probability fields, and prohibited auto-send flags.
+- Six synthetic evaluation scenarios covering price-only inquiry, qualified interest, supplier comparison, payment concern, ad/vehicle conflict, and short silence.
+- Initial DeepSeek function-calling adapter and Windows setup guide.
+
+Local unit-test logic has been exercised during development. A live DeepSeek API call has **not** yet been verified; it requires the owner's API key and network access. Qwen, Doubao, GLM, and ERNIE adapters remain planned.
+
+See [Sales Analysis Quality Specification](docs/sales-analysis-quality-spec.md) and [DeepSeek Integration Guide](docs/deepseek-integration.md).
+
 ## Development status
 
 This repository is being built from scratch. Until code, tests, and live provider integration checks pass, features are considered planned or in development—not production-ready.
