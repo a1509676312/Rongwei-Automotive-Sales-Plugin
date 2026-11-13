@@ -45,7 +45,7 @@ def test_qualified_buyer_gets_traceable_evidence_score():
             {"key": "vehicle_requirements_specific", "evidence_ids": ["e1"]},
             {"key": "quantity_confirmed", "evidence_ids": ["e2"]},
             {"key": "destination_confirmed", "evidence_ids": ["e3"]},
-            {"key": "purchase_timeline_30d", "evidence_ids": ["e4"]},
+            {"key": "purchase_timeline_30d", "evidence_ids": ["e5"]},
         ],
     )
     result = assess_lead(data)
@@ -101,7 +101,7 @@ def test_payment_received_requires_user_or_external_verification():
         )
 
     data = LeadInput(
-        evidence=[{"id": "e1", "source": "user_note", "summary": "卖方已核对银行到账记录"}],
+        evidence=[{"id": "e1", "source": "user_note", "summary": "卖方已核对银行到账记录", "is_verified": True}],
         milestones=[{"key": "payment_received", "evidence_ids": ["e1"]}],
     )
     assert assess_lead(data).current_stage == "payment_received"
@@ -135,4 +135,104 @@ def test_fact_evidence_cannot_reference_missing_record():
         LeadInput(
             facts={"quantity": 4},
             fact_evidence={"quantity": ["not-found"]},
+        )
+
+
+
+def test_payment_received_is_a_later_stage_than_order_confirmed():
+    data = LeadInput(
+        evidence=[
+            {"id": "e1", "source": "customer_message", "summary": "双方确认订单"},
+            {
+                "id": "e2",
+                "source": "user_note",
+                "summary": "卖方已核对对应订单的银行到账",
+                "is_verified": True,
+            },
+        ],
+        milestones=[
+            {"key": "order_confirmed", "evidence_ids": ["e1"]},
+            {"key": "payment_received", "evidence_ids": ["e2"]},
+        ],
+    )
+    assert assess_lead(data).current_stage == "payment_received"
+
+
+def test_decline_and_order_history_without_timestamps_is_flagged_as_ambiguous():
+    data = LeadInput(
+        evidence=[
+            {"id": "e1", "source": "customer_message", "summary": "客户确认过订单"},
+            {"id": "e2", "source": "customer_message", "summary": "客户后来表示不继续"},
+        ],
+        milestones=[
+            {"key": "order_confirmed", "evidence_ids": ["e1"]},
+            {"key": "explicitly_declined", "evidence_ids": ["e2"]},
+        ],
+    )
+    result = assess_lead(data)
+    assert result.current_stage == "needs_discovery"
+    assert result.milestone_conflicts
+
+
+def test_latest_decline_closes_previous_order_history():
+    data = LeadInput(
+        evidence=[
+            {"id": "e1", "source": "customer_message", "summary": "客户确认订单"},
+            {"id": "e2", "source": "customer_message", "summary": "客户明确取消采购"},
+        ],
+        milestones=[
+            {
+                "key": "order_confirmed",
+                "evidence_ids": ["e1"],
+                "observed_at": "2026-11-12T10:00:00+08:00",
+            },
+            {
+                "key": "explicitly_declined",
+                "evidence_ids": ["e2"],
+                "observed_at": "2026-11-12T14:00:00+08:00",
+            },
+        ],
+    )
+    assert assess_lead(data).current_stage == "closed_lost"
+
+
+def test_customer_reengagement_after_decline_reopens_latest_active_stage():
+    data = LeadInput(
+        evidence=[
+            {"id": "e1", "source": "customer_message", "summary": "客户确认订单"},
+            {"id": "e2", "source": "customer_message", "summary": "客户取消采购"},
+            {"id": "e3", "source": "customer_message", "summary": "客户重新安排付款"},
+        ],
+        milestones=[
+            {
+                "key": "order_confirmed",
+                "evidence_ids": ["e1"],
+                "observed_at": "2026-11-12T10:00:00+08:00",
+            },
+            {
+                "key": "explicitly_declined",
+                "evidence_ids": ["e2"],
+                "observed_at": "2026-11-12T14:00:00+08:00",
+            },
+            {
+                "key": "payment_initiated",
+                "evidence_ids": ["e3"],
+                "observed_at": "2026-11-13T09:00:00+08:00",
+            },
+        ],
+    )
+    assert assess_lead(data).current_stage == "payment_pending"
+
+
+def test_milestone_timestamp_requires_timezone_offset():
+    with pytest.raises(ValidationError):
+        LeadInput(
+            evidence=[{"id": "e1", "source": "customer_message", "summary": "客户确认订单"}],
+            milestones=[
+                {
+                    "key": "order_confirmed",
+                    "evidence_ids": ["e1"],
+                    "observed_at": "2026-11-12T10:00:00",
+                }
+            ],
         )
