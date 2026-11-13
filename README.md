@@ -72,7 +72,7 @@ Rongwei Automotive Sales Plugin 为宿主 AI 提供汽车出口销售工具、�
 - 当前提供 OpenAPI/REST 接口，适用于支持自定义工具或 API 调用的 AI 平台。
 - 提供通用函数调用结果分发器，保留模型生成的 `tool_call_id`，并将结果按 `role=tool` 结构返回。
 - MCP 适配器列入后续开发，不冒称已经完成。
-- 模型 API Key 由宿主 AI 平台管理；插件自身的 REST API 使用独立的 `RONGWEI_API_KEY`。
+- 模型 API Key 由对应模型平台管理；本项目为 DeepSeek、千问、豆包、GLM（百炼路线）和千帆提供统一 OpenAI-compatible 工具调用适配器。插件自身的 REST API 使用独立的 `RONGWEI_API_KEY`。
 - 截图可由宿主 AI 先完成视觉识别，再把提取结果与证据交给插件。插件不接入聊天渠道。
 - 车型资料、市场/海关数据、客户历史记忆均作为可选扩展，不是基础运行前提。
 
@@ -81,7 +81,7 @@ Rongwei Automotive Sales Plugin 为宿主 AI 提供汽车出口销售工具、�
 需要 Python 3.11 或更高版本。
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev,providers]"
 export RONGWEI_API_KEY="replace-with-your-own-long-random-key"
 python -m rongwei_plugin.api
 ```
@@ -94,7 +94,7 @@ python -m rongwei_plugin.api
 - 批量回传工具调用：`POST http://127.0.0.1:8000/v1/tool-calls/dispatch`
 - OpenAPI 文档：`http://127.0.0.1:8000/docs`
 
-所有工具接口使用请求头 `X-Rongwei-API-Key`。工具调用只返回销售分析/建议，不会执行消息发送。
+所有工具接口使用请求头 `X-Rongwei-API-Key`。模型调用示例：`python examples/chinese_ai_tool_call.py deepseek`（也可替换为 `qwen`、`doubao`、`glm`、`qianfan`）。每个平台需配置各自 API Key 和模型 ID 环境变量，具体见 `docs/provider-adapters.md`。工具调用只返回销售分析/建议，不会执行消息发送。
 
 ## 开发验收原则
 
