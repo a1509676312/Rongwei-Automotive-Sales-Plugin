@@ -105,12 +105,16 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
 
     signal_scores: list[SignalScore] = []
     caution: list[str] = []
+    caution_evidence: list[SignalScore] = []
     total = 0
     for key, evidence_ids in sorted(unique.items()):
         points = _SIGNAL_WEIGHTS[key]
         total += points
         if points < 0:
             caution.append(key)
+            caution_evidence.append(
+                SignalScore(key=key, points=points, evidence_ids=evidence_ids)
+            )
         else:
             signal_scores.append(SignalScore(key=key, points=points, evidence_ids=evidence_ids))
 
@@ -153,6 +157,9 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
     if stage in {"order_process", "payment_pending"}:
         next_objective = "把订单主体、车型配置、数量、单证和付款节点逐项核实"
         next_action = "逐项确认未锁定的订单要素，并将已确认事项与待核实事项分开记录。"
+    elif stage == "payment_received":
+        next_objective = "确认收款凭证与订单对应关系，并推进已确认的履约准备"
+        next_action = "将到账凭证、付款主体和对应订单核对一致，再按已确认的合同和交付流程推进。"
     elif stage in {"commercial_process", "solution_alignment"}:
         next_objective = "消除当前最大商务或交付障碍，争取客户确认下一步"
         next_action = "围绕客户当前最关心的一个问题给出有依据的答复，再提出一个明确、容易回答的下一步。"
@@ -178,6 +185,7 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
         stage_reason=stage_reason,
         positive_signals=signal_scores,
         caution_signals=caution,
+        caution_signal_evidence=caution_evidence,
         blockers=blockers,
         missing_information=missing,
         next_objective=next_objective,
