@@ -106,10 +106,10 @@ class LeadInput(ContractModel):
             raise ValueError(f"Unknown fact fields in fact_evidence: {', '.join(unknown_fact_fields)}")
         for field_name in self.fact_evidence:
             value = fact_values.get(field_name)
-            if value is None or value == "unknown" or value == "":
+            if value is None or (field_name == "buyer_type" and value == "unknown") or value == "":
                 raise ValueError(f"Fact evidence supplied for an empty fact field: '{field_name}'.")
         for field_name, value in fact_values.items():
-            if value == "unknown" or value == "":
+            if (field_name == "buyer_type" and value == "unknown") or value == "":
                 continue
             refs = self.fact_evidence.get(field_name, [])
             if not refs:
