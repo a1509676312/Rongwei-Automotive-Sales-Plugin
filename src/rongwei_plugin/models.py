@@ -123,6 +123,11 @@ class LeadInput(ContractModel):
             missing = sorted(set(item.evidence_ids) - known)
             if missing:
                 raise ValueError(f"Unknown evidence IDs referenced: {', '.join(missing)}")
+        for milestone in self.milestones:
+            if milestone.observed_at is not None and milestone.observed_at.utcoffset() is None:
+                raise ValueError(
+                    "Milestone observed_at must include a timezone offset to resolve event order."
+                )
         evidence_by_id = {item.id: item for item in self.evidence}
         for milestone in self.milestones:
             if milestone.key == "payment_received":
