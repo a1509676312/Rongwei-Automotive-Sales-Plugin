@@ -286,9 +286,7 @@ def assess_lead(data: LeadInput) -> LeadAssessment:
         next_objective = "确认客户是否有真实、具体的采购计划"
         next_action = "先问清车型用途、数量、目的国家和采购时间；一次只聚焦最关键的缺口。"
 
-    blockers = list(dict.fromkeys([*data.blockers, *milestone_conflicts]))
-    if not blockers:
-        blockers = ["尚未从输入中明确识别具体阻碍；需要结合客户原话确认。"]
+    blockers = data.blockers
 
     return LeadAssessment(
         case_ref=data.case_ref,
