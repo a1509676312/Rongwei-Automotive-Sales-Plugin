@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rongwei.example/schemas/sales-analysis-result.schema.json",
+  "title": "Rongwei Sales Analysis Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buying_stage",
+    "intent_assessment",
+    "primary_next_objective",
+    "recommended_next_action",
+    "evidence_and_confidence"
+  ],
+  "properties": {
+    "conversation_summary": {
+      "type": "string"
+    },
+    "vehicle_and_ad_attribution": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "reference",
+          "status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "confirmed",
+              "probable",
+              "unknown",
+              "conflict"
+            ]
+          },
+          "rationale": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "buyer_requirements": {
+      "type": "object"
+    },
+    "buying_stage": {
+      "enum": [
+        "new_inquiry",
+        "needs_discovery",
+        "qualified_interest",
+        "active_evaluation",
+        "commercial_alignment",
+        "decision_pending",
+        "ready_for_order",
+        "on_hold",
+        "lost_or_unresponsive",
+        "unknown"
+      ]
+    },
+    "intent_assessment": {
+      "type": "object",
+      "required": [
+        "level",
+        "rationale",
+        "evidence_coverage",
+        "confidence"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "low",
+            "developing",
+            "qualified",
+            "high",
+            "insufficient_evidence"
+          ]
+        },
+        "heuristic_index": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Optional evidence index only; never a close probability."
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "evidence_coverage": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    },
+    "positive_signals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "objections_and_risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "issue",
+          "kind",
+          "impact"
+        ],
+        "properties": {
+          "issue": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "explicit_objection",
+              "inferred_concern",
+              "commercial_risk",
+              "unknown"
+            ]
+          },
+          "impact": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "missing_critical_information": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "salesperson_review": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding",
+          "commercial_consequence",
+          "correction"
+        ],
+        "properties": {
+          "finding": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "commercial_consequence": {
+            "type": "string"
+          },
+          "correction": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "primary_next_objective": {
+      "type": "string"
+    },
+    "recommended_next_action": {
+      "type": "string"
+    },
+    "reply_draft": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Draft only; never send automatically."
+    },
+    "reply_chinese_explanation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "follow_up_trigger": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fact_checks_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_and_confidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "classification"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "classification": {
+            "enum": [
+              "user_provided",
+              "externally_verified",
+              "inference",
+              "unknown",
+              "conflict"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
