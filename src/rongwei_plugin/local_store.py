@@ -292,3 +292,63 @@ class LocalStore:
         shutil.copy2(backup_path, temp_path)
         os.replace(temp_path, self.database_path)
         self._initialize()
+
+
+    def add_advertisement(self, *, source: str | None = None, vehicle_label: str | None = None,
+                          content: str | None = None, image_path: str | None = None) -> str:
+        ad_id = str(uuid.uuid4())
+        with self._connect() as db:
+            db.execute("""INSERT INTO advertisements(id,source,vehicle_label,content,image_path,created_at)
+                VALUES(?,?,?,?,?,?)""", (ad_id,source,vehicle_label,content,image_path,_now()))
+        return ad_id
+
+    def link_advertisement(self, customer_id: str, advertisement_id: str) -> None:
+        with self._connect() as db:
+            db.execute("""INSERT OR IGNORE INTO customer_ad_links(customer_id,advertisement_id)
+                VALUES(?,?)""", (customer_id,advertisement_id))
+
+    def save_quote(self, *, payload: dict[str, Any], terms: str, currency: str,
+                   customer_id: str | None = None, version: int | None = None) -> str:
+        quote_id = str(uuid.uuid4())
+        with self._connect() as db:
+            if version is None:
+                row = db.execute("SELECT COALESCE(MAX(version),0) AS v FROM quotes WHERE customer_id IS ?",
+                                 (customer_id,)).fetchone()
+                version = int(row["v"]) + 1
+            db.execute("""INSERT INTO quotes(id,customer_id,created_at,version,terms,currency,payload_json)
+                VALUES(?,?,?,?,?,?,?)""",
+                (quote_id,customer_id,_now(),version,terms,currency,
+                 json.dumps(payload,ensure_ascii=False,default=str)))
+        return quote_id
+
+    def list_quotes(self, customer_id: str, limit: int = 50) -> list[dict[str, Any]]:
+        with self._connect() as db:
+            rows = db.execute("""SELECT * FROM quotes WHERE customer_id=?
+                ORDER BY version DESC, created_at DESC LIMIT ?""",
+                (customer_id,max(1,min(limit,200)))).fetchall()
+        output=[]
+        for row in rows:
+            item=dict(row)
+            item["payload"]=json.loads(item.pop("payload_json"))
+            output.append(item)
+        return output
+
+    def list_open_commitments(self, customer_id: str | None = None,
+                              limit: int = 100) -> list[dict[str, Any]]:
+        with self._connect() as db:
+            if customer_id:
+                rows=db.execute("""SELECT * FROM commitments WHERE status='open' AND customer_id=?
+                    ORDER BY COALESCE(due_at,'9999') LIMIT ?""",
+                    (customer_id,max(1,min(limit,500)))).fetchall()
+            else:
+                rows=db.execute("""SELECT * FROM commitments WHERE status='open'
+                    ORDER BY COALESCE(due_at,'9999') LIMIT ?""",
+                    (max(1,min(limit,500)),)).fetchall()
+        return [dict(row) for row in rows]
+
+    def complete_commitment(self, commitment_id: str) -> None:
+        with self._connect() as db:
+            cursor=db.execute("""UPDATE commitments SET status='completed',completed_at=?
+                WHERE id=? AND status='open'""",(_now(),commitment_id))
+            if cursor.rowcount != 1:
+                raise ValueError("Open commitment not found.")
