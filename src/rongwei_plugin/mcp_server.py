@@ -6,7 +6,6 @@ Transport is stdio so the host can launch it as a local child process.
 from __future__ import annotations
 
 import json
-from decimal import Decimal
 from typing import Any
 
 from rongwei_plugin.local_store import LocalStore
@@ -15,7 +14,6 @@ from rongwei_plugin.sales.review import review_sales_execution
 from rongwei_plugin.sales.scoring import assess_lead
 from rongwei_plugin.models import LeadInput, ObjectionRequest, SalesExecutionInput
 from rongwei_plugin.trade import QuoteInput, calculate_quote
-from rongwei_plugin.tools.catalog import get_tool_catalog
 
 
 def build_server():
