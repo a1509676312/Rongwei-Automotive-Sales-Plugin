@@ -27,6 +27,8 @@ from rongwei_plugin.sales.playbook import get_objection_plan
 from rongwei_plugin.sales.review import review_sales_execution
 from rongwei_plugin.sales.scoring import assess_lead
 from rongwei_plugin.tool_dispatch import ToolCallDispatchError, execute_provider_tool_calls
+from rongwei_plugin.local_store import LocalStore
+from rongwei_plugin.trade import QuoteInput, calculate_quote
 from rongwei_plugin.tools.catalog import execute_tool, get_tool_catalog, registered_tool_names
 
 app = FastAPI(
@@ -160,3 +162,105 @@ def dispatch_tool_calls(payload: Annotated[dict[str, Any], Body()]) -> dict[str,
         return {"tool_messages": execute_provider_tool_calls(calls)}
     except ToolCallDispatchError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+
+# Local-first customer memory and sales operations. These routes write only to the
+# per-user data directory and remain protected by the local API key.
+@app.post("/v1/local/customers", tags=["local-memory"], dependencies=[Depends(_require_api_key)])
+def create_local_customer(payload: dict[str, Any]) -> dict[str, str]:
+    store = LocalStore()
+    customer_id = store.create_customer(
+        name=payload.get("name"), company=payload.get("company"),
+        phone=payload.get("phone"), country=payload.get("country"),
+        city=payload.get("city"), buyer_type=payload.get("buyer_type"),
+        facts=payload.get("facts") or {}, whatsapp=payload.get("whatsapp"),
+        telegram=payload.get("telegram"), email=payload.get("email"),
+    )
+    return {"customer_id": customer_id}
+
+
+@app.get("/v1/local/customers", tags=["local-memory"], dependencies=[Depends(_require_api_key)])
+def search_local_customers(country: str | None = None, query: str | None = None,
+                           limit: int = 50) -> dict[str, Any]:
+    return {"customers": LocalStore().search_customers(country=country, query=query, limit=limit)}
+
+
+@app.get("/v1/local/customers/{customer_id}", tags=["local-memory"], dependencies=[Depends(_require_api_key)])
+def get_local_customer(customer_id: str) -> dict[str, Any]:
+    customer = LocalStore().get_customer(customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found.")
+    return customer
+
+
+@app.post("/v1/local/customers/{customer_id}/interactions", tags=["local-memory"],
+          dependencies=[Depends(_require_api_key)])
+def append_local_interaction(customer_id: str, payload: dict[str, Any]) -> dict[str, str]:
+    interaction_id = LocalStore().append_interaction(
+        customer_id, str(payload.get("content", "")),
+        source=str(payload.get("source", "user_input")),
+        language=payload.get("language"), occurred_at=payload.get("occurred_at"),
+        evidence=payload.get("evidence") or {},
+    )
+    return {"interaction_id": interaction_id}
+
+
+@app.get("/v1/local/customers/{customer_id}/interactions", tags=["local-memory"],
+         dependencies=[Depends(_require_api_key)])
+def get_local_interactions(customer_id: str, limit: int = 100) -> dict[str, Any]:
+    return {"interactions": LocalStore().list_interactions(customer_id, limit=limit)}
+
+
+@app.post("/v1/local/ports", tags=["port-knowledge"], dependencies=[Depends(_require_api_key)])
+def add_local_port(payload: dict[str, Any]) -> dict[str, str]:
+    port_id = LocalStore().add_port(
+        country=payload["country"], name=payload["name"], city=payload.get("city"),
+        transport_type=payload.get("transport_type", "seaport"),
+        status=payload.get("status", "historical_reference"),
+        source_customer_id=payload.get("source_customer_id"),
+        source_note=payload.get("source_note"), confirmed_at=payload.get("confirmed_at"),
+    )
+    return {"port_id": port_id}
+
+
+@app.get("/v1/local/ports/{country}", tags=["port-knowledge"],
+         dependencies=[Depends(_require_api_key)])
+def recommend_local_ports(country: str, limit: int = 20) -> dict[str, Any]:
+    return {"country": country, "recommendations": LocalStore().recommend_ports(country, limit)}
+
+
+@app.post("/v1/local/customers/{customer_id}/followups", tags=["follow-up"],
+          dependencies=[Depends(_require_api_key)])
+def add_local_followup(customer_id: str, payload: dict[str, Any]) -> dict[str, str]:
+    followup_id = LocalStore().add_followup(customer_id, payload["due_at"], payload["objective"])
+    return {"followup_id": followup_id}
+
+
+@app.get("/v1/local/followups/due", tags=["follow-up"], dependencies=[Depends(_require_api_key)])
+def get_due_local_followups(limit: int = 100) -> dict[str, Any]:
+    return {"followups": LocalStore().list_due_followups(limit=limit)}
+
+
+@app.post("/v1/local/quotes", tags=["quote"], dependencies=[Depends(_require_api_key)])
+def calculate_and_save_local_quote(payload: dict[str, Any]) -> dict[str, Any]:
+    quote_data = QuoteInput.model_validate(payload.get("quote", payload))
+    result = calculate_quote(quote_data)
+    customer_id = payload.get("customer_id")
+    quote_id = LocalStore().save_quote(
+        payload=result, terms=quote_data.trade_term, currency=quote_data.currency,
+        customer_id=customer_id,
+    )
+    return {"quote_id": quote_id, "quote": result}
+
+
+@app.get("/v1/local/customers/{customer_id}/quotes", tags=["quote"],
+         dependencies=[Depends(_require_api_key)])
+def get_local_quote_history(customer_id: str, limit: int = 50) -> dict[str, Any]:
+    return {"quotes": LocalStore().list_quotes(customer_id, limit=limit)}
+
+
+@app.post("/v1/local/backup", tags=["local-memory"], dependencies=[Depends(_require_api_key)])
+def backup_local_data() -> dict[str, str]:
+    path = LocalStore().backup()
+    return {"status": "ok", "backup_file": str(path)}
