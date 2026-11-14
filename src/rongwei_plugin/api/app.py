@@ -244,7 +244,10 @@ def get_due_local_followups(limit: int = 100) -> dict[str, Any]:
 
 @app.post("/v1/local/quotes", tags=["quote"], dependencies=[Depends(_require_api_key)])
 def calculate_and_save_local_quote(payload: dict[str, Any]) -> dict[str, Any]:
-    quote_data = QuoteInput.model_validate(payload.get("quote", payload))
+    quote_payload = payload.get("quote")
+    if quote_payload is None:
+        quote_payload = {key: value for key, value in payload.items() if key != "customer_id"}
+    quote_data = QuoteInput.model_validate(quote_payload)
     result = calculate_quote(quote_data)
     customer_id = payload.get("customer_id")
     quote_id = LocalStore().save_quote(
