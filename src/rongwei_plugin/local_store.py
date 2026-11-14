@@ -290,6 +290,17 @@ class LocalStore:
         self.backup()
         temp_path = self.database_path.with_suffix(".restore.tmp")
         shutil.copy2(backup_path, temp_path)
+        with sqlite3.connect(temp_path) as staged:
+            if staged.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                temp_path.unlink(missing_ok=True)
+                raise ValueError("Backup changed during restore; original data was not changed.")
+        current = self._connect()
+        try:
+            current.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        finally:
+            current.close()
+        Path(str(self.database_path) + "-wal").unlink(missing_ok=True)
+        Path(str(self.database_path) + "-shm").unlink(missing_ok=True)
         os.replace(temp_path, self.database_path)
         self._initialize()
 
